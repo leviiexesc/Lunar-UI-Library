@@ -135,6 +135,10 @@ end
 
 local function button(parent, label, theme, props)
     props = props or {}
+    local usePop = props.Pop == true
+    local radius = props.Radius or 7
+    props.Pop = nil -- Internal Lunar UI option; not a Roblox TextButton property.
+    props.Radius = nil -- Internal Lunar UI option; not a Roblox TextButton property.
     props.Text = label
     props.Font = Enum.Font.GothamMedium
     props.TextSize = props.TextSize or 12
@@ -142,7 +146,7 @@ local function button(parent, label, theme, props)
     props.BackgroundColor3 = props.BackgroundColor3 or theme.SurfaceHover
     props.AutoButtonColor = false
     local item = make("TextButton", props, parent)
-    corner(item, props.Radius or 7)
+    corner(item, radius)
     local restingColor, restingTransparency = item.BackgroundColor3, item.BackgroundTransparency
     item.MouseEnter:Connect(function()
         if restingTransparency < 1 then tween(item, { BackgroundColor3 = restingColor:Lerp(theme.Accent, .15) }, .14) end
@@ -150,7 +154,6 @@ local function button(parent, label, theme, props)
     item.MouseLeave:Connect(function()
         if restingTransparency < 1 then tween(item, { BackgroundColor3 = restingColor }, .18) end
     end)
-    local usePop = props.Pop == true
     item.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             if usePop and LunarUI.ButtonPopEnabled then TweenService:Create(getScale(item), TweenInfo.new(.08, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = .95 }):Play() end
@@ -546,9 +549,12 @@ end
 function LunarUI:AddButton(options)
     options = options or {}
     local row = self:_row(options.Title or "Button", options.Description)
-    local action = button(row, options.ButtonText or "Execute", self.Window.Theme, { Position = UDim2.new(1, -112, .5, -14), Size = UDim2.fromOffset(112, 28), BackgroundColor3 = self.Window.Theme.Accent, TextColor3 = self.Window.Theme.AccentText or Color3.new(1,1,1), Pop = true })
-    glow(action, self.Window.Theme.Accent, .34)
-    action.MouseButton1Click:Connect(function() if options.Callback then options.Callback() end end)
+    local action = button(row, options.ButtonText or "Execute", self.Window.Theme, {
+        Name = "LunarButton", Position = UDim2.new(1, -112, .5, -14),
+        Size = UDim2.fromOffset(112, 28), BackgroundColor3 = self.Window.Theme.Accent,
+        TextColor3 = self.Window.Theme.AccentText or Color3.new(1, 1, 1), Pop = true,
+    })
+    action.Activated:Connect(function() if options.Callback then options.Callback() end end)
     return action
 end
 
@@ -557,7 +563,7 @@ function LunarUI:AddToggle(options)
     local toggle = make("TextButton", { Text = "", AutoButtonColor = false, BackgroundColor3 = value and self.Window.Theme.Accent or self.Window.Theme.Border, Position = UDim2.new(1, -39, .5, -10), Size = UDim2.fromOffset(39, 20) }, row); corner(toggle, 12)
     local dot = make("Frame", { BackgroundColor3 = Color3.new(1,1,1), Size = UDim2.fromOffset(14,14), Position = UDim2.fromOffset(value and 22 or 3,3) }, toggle); corner(dot, 10)
     local function set(new) value = new; tween(toggle, { BackgroundColor3 = value and self.Window.Theme.Accent or self.Window.Theme.Border }, .16); tween(dot, { Position = UDim2.fromOffset(value and 22 or 3,3) }, .16); self.Window.Values[options.Flag or options.Title] = value; if options.Callback then options.Callback(value) end end
-    toggle.MouseButton1Click:Connect(function() set(not value) end); set(value); return { Set = set, Value = function() return value end }
+    toggle.Activated:Connect(function() set(not value) end); set(value); return { Set = set, Value = function() return value end }
 end
 
 function LunarUI:AddCheckbox(options) return self:AddToggle(options) end
