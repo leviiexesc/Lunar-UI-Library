@@ -81,6 +81,10 @@ Set Launcher = false in CreateWindow if you do not want this shortcut.
 Use `LunarUI:SetAnimationStyle("Fluid")` for the default spring-like mobile
 motion, `"Soft"` for gentler easing, or `"Fast"` for quick utility menus.
 
+Every Lunar button uses press and pop feedback, and selected tabs/sections animate
+into view. In the Interface section, **Show profile name** hides or shows the
+DisplayName and @Username while leaving the Roblox avatar visible.
+
 ## Project layout
 
 ```text

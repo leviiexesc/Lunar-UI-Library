@@ -71,6 +71,29 @@ local function tween(object, properties, duration)
     TweenService:Create(object, TweenInfo.new((duration or .18) * speed, easing, Enum.EasingDirection.Out), properties):Play()
 end
 
+local function getScale(object)
+    local scale = object:FindFirstChild("LunarMotionScale")
+    if not scale then scale = make("UIScale", { Name = "LunarMotionScale", Scale = 1 }, object) end
+    return scale
+end
+
+local function pop(object, peak, duration)
+    if not LunarUI.AnimationsEnabled or not object or not object.Parent then return end
+    local scale = getScale(object)
+    tween(scale, { Scale = peak or 1.045 }, (duration or .1) * .45)
+    task.delay((duration or .1) * .45, function()
+        if scale.Parent then tween(scale, { Scale = 1 }, duration or .16) end
+    end)
+end
+
+local function appear(object, delay)
+    local scale = getScale(object)
+    scale.Scale = LunarUI.AnimationsEnabled and .96 or 1
+    task.delay(delay or 0, function()
+        if scale.Parent then tween(scale, { Scale = 1 }, .24) end
+    end)
+end
+
 local function text(parent, value, size, color, props)
     props = props or {}
     props.BackgroundTransparency = 1
@@ -99,6 +122,16 @@ local function button(parent, label, theme, props)
     end)
     item.MouseLeave:Connect(function()
         if restingTransparency < 1 then tween(item, { BackgroundColor3 = restingColor }, .18) end
+    end)
+    item.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            tween(getScale(item), { Scale = .95 }, .08)
+        end
+    end)
+    item.Activated:Connect(function()
+        local scale = getScale(item)
+        tween(scale, { Scale = 1.055 }, .1)
+        task.delay(.1, function() if scale.Parent then tween(scale, { Scale = 1 }, .16) end end)
     end)
     return item
 end
@@ -292,10 +325,10 @@ function LunarUI:CreateWindow(options)
     }, profile)
     corner(avatar, 17)
     local localPlayer = Players.LocalPlayer
-    text(profile, localPlayer.DisplayName, 10, theme.Text, {
+    local profileName = text(profile, localPlayer.DisplayName, 10, theme.Text, {
         Position = UDim2.fromOffset(49, 7), Size = UDim2.new(1, -56, 0, 16), Font = Enum.Font.GothamBold,
     })
-    text(profile, "@" .. localPlayer.Name, 8, theme.Muted, {
+    local profileUsername = text(profile, "@" .. localPlayer.Name, 8, theme.Muted, {
         Position = UDim2.fromOffset(49, 23), Size = UDim2.new(1, -56, 0, 15),
     })
     task.spawn(function()
@@ -309,9 +342,12 @@ function LunarUI:CreateWindow(options)
     local contentLayout = make("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }, content)
     contentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() content.CanvasSize = UDim2.fromOffset(0, contentLayout.AbsoluteContentSize.Y + 36) end)
     bindDrag(topbar, root)
-    local window = setmetatable({ Gui = gui, Root = root, Launcher = launcher, Body = body, Sidebar = sidebar, Content = content, Theme = theme, ThemeName = themeName, Tabs = {}, Values = {}, Flags = {}, _activeTab = nil }, LunarUI)
+    local window = setmetatable({ Gui = gui, Root = root, Launcher = launcher, Body = body, Sidebar = sidebar, Content = content, Profile = profile, Avatar = avatar, ProfileName = profileName, ProfileUsername = profileUsername, Theme = theme, ThemeName = themeName, Tabs = {}, Values = {}, Flags = {}, _activeTab = nil }, LunarUI)
     tween(scale, { Scale = 1 }, .35)
-    minimize.MouseButton1Click:Connect(function() body.Visible = not body.Visible; root.Size = UDim2.fromOffset(root.Size.X.Offset, body.Visible and (options.Height or 500) or 56) end)
+    minimize.MouseButton1Click:Connect(function()
+        body.Visible = not body.Visible
+        tween(root, { Size = UDim2.fromOffset(root.Size.X.Offset, body.Visible and (options.Height or 500) or 56) }, .24)
+    end)
     maximize.MouseButton1Click:Connect(function()
         local maximized = root:GetAttribute("Maximized")
         root:SetAttribute("Maximized", not maximized)
@@ -359,7 +395,14 @@ function LunarUI:AddTab(options)
     local layout = make("UIListLayout", { Padding = UDim.new(0, 11), SortOrder = Enum.SortOrder.LayoutOrder }, page)
     local function select()
         for _, item in pairs(self.Tabs) do item.Page.Visible = false; tween(item.Nav, { BackgroundTransparency = 1, TextColor3 = self.Theme.Muted }, .15) end
-        page.Visible = true; tween(nav, { BackgroundColor3 = self.Theme.AccentSoft, BackgroundTransparency = 0, TextColor3 = self.Theme.Text }, .15); self._activeTab = tab
+        page.Visible = true
+        tween(nav, { BackgroundColor3 = self.Theme.AccentSoft, BackgroundTransparency = 0, TextColor3 = self.Theme.Text }, .15)
+        pop(nav, 1.045, .16)
+        appear(page)
+        for index, child in ipairs(page:GetChildren()) do
+            if child:IsA("GuiObject") then appear(child, index * .025) end
+        end
+        self._activeTab = tab
     end
     nav.MouseButton1Click:Connect(select)
     tab.Nav, tab.Page, tab.Layout, tab.Select = nav, page, layout, select
@@ -375,6 +418,7 @@ function LunarUI:AddSection(options)
     corner(frame, 9); stroke(frame, self.Window.Theme.Border, .3); padding(frame, 13)
     local layout = make("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }, frame)
     text(frame, options.Title or "Section", 11, self.Window.Theme.Text, { Size = UDim2.new(1, 0, 0, 18), Font = Enum.Font.GothamBold })
+    appear(frame, (#self.Sections or 0) * .03)
     section.Frame, section.Layout = frame, layout
     table.insert(self.Sections, section)
     return section
@@ -400,7 +444,7 @@ function LunarUI:AddToggle(options)
     local toggle = make("TextButton", { Text = "", AutoButtonColor = false, BackgroundColor3 = value and self.Window.Theme.Accent or self.Window.Theme.Border, Position = UDim2.new(1, -39, .5, -10), Size = UDim2.fromOffset(39, 20) }, row); corner(toggle, 12)
     local dot = make("Frame", { BackgroundColor3 = Color3.new(1,1,1), Size = UDim2.fromOffset(14,14), Position = UDim2.fromOffset(value and 22 or 3,3) }, toggle); corner(dot, 10)
     local function set(new) value = new; tween(toggle, { BackgroundColor3 = value and self.Window.Theme.Accent or self.Window.Theme.Border }, .16); tween(dot, { Position = UDim2.fromOffset(value and 22 or 3,3) }, .16); self.Window.Values[options.Flag or options.Title] = value; if options.Callback then options.Callback(value) end end
-    toggle.MouseButton1Click:Connect(function() set(not value) end); set(value); return { Set = set, Value = function() return value end }
+    toggle.MouseButton1Click:Connect(function() pop(toggle, 1.1, .15); set(not value) end); set(value); return { Set = set, Value = function() return value end }
 end
 
 function LunarUI:AddCheckbox(options) return self:AddToggle(options) end
@@ -521,6 +565,25 @@ end
 function LunarUI:SetAnimationsEnabled(enabled)
     self.AnimationsEnabled = enabled ~= false
     return self.AnimationsEnabled
+end
+function LunarUI:SetProfileNameVisible(visible)
+    visible = visible ~= false
+    self.Values["LunarProfileNames"] = visible
+    for _, label in ipairs({ self.ProfileName, self.ProfileUsername }) do
+        if label then
+            if visible then
+                label.Visible = true
+                label.TextTransparency = 1
+                tween(label, { TextTransparency = 0 }, .16)
+            else
+                tween(label, { TextTransparency = 1 }, .13)
+                task.delay(LunarUI.AnimationsEnabled and .13 or 0, function()
+                    if label.Parent and not self.Values["LunarProfileNames"] then label.Visible = false end
+                end)
+            end
+        end
+    end
+    return visible
 end
 function LunarUI:SetAnimationStyle(style)
     assert(style == "Fluid" or style == "Soft" or style == "Fast", "Animation style must be Fluid, Soft, or Fast.")

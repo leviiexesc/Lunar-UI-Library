@@ -50,6 +50,14 @@ function InterfaceManager:BuildInterfaceSection(tab, window)
             if self.Library then self.Library:SetAnimationStyle(style) end
         end,
     })
+    section:AddToggle("LunarProfileNames", {
+        Title = "Show profile name",
+        Description = "Show your DisplayName and @Username beside the avatar.",
+        Default = true,
+        Callback = function(visible)
+            window:SetProfileNameVisible(visible)
+        end,
+    })
     section:AddKeybind("LunarToggleKey", {
         Title = "Toggle interface",
         Description = "Show or hide the Lunar UI window.",
