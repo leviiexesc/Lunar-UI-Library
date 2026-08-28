@@ -1,15 +1,7 @@
-getgenv().Key = ""
-getgenv().LicenseEndpoint = "https://YOUR-LICENSE-SERVER.example.com"
-
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LunarUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/leviiexesc/Lunar-UI-Library/refs/heads/main/LunarUI.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/leviiexesc/Lunar-UI-Library/refs/heads/main/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/leviiexesc/Lunar-UI-Library/refs/heads/main/Addons/InterfaceManager.lua"))()
-local LicenseManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/leviiexesc/Lunar-UI-Library/refs/heads/main/Addons/LicenseManager.lua"))()
-
-LicenseManager:SetEndpoint(getgenv().LicenseEndpoint)
-local licensed = LicenseManager:ValidateOrKick(getgenv().Key)
-if not licensed then return end
 
 -- Register your Roblox-uploaded Lucide assets once. The keys are exact names
 -- from https://lucide.dev/icons/ and can be used in Icon = "..." below.

@@ -20,9 +20,6 @@
         },
         "InterfaceManager": {
           "$path": "Addons/InterfaceManager.lua"
-        },
-        "LicenseManager": {
-          "$path": "Addons/LicenseManager.lua"
         }
       }
     }

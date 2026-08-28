@@ -73,16 +73,6 @@ adapter in ordinary Roblox projects, or it will use readfile / writefile when
 those APIs are provided by the target environment. Addons/InterfaceManager.lua
 builds a Settings tab with theme and interface-toggle controls.
 
-## License server
-
-The optional `license-server` folder provides one-device license validation.
-Deploy it separately, set its `ADMIN_TOKEN` environment variable, and set
-`getgenv().LicenseEndpoint` in `Example.luau` to its public HTTPS URL. Put the
-license in `getgenv().Key`. The first device binds the key; another device is
-rejected and kicked. Use the server's authenticated `/admin/reset` endpoint to
-clear a binding. Keep the admin token private and use persistent storage for
-`licenses.json`.
-
 The interface settings include a Smooth animations toggle. When disabled, Lunar UI
 applies UI changes immediately. A small moon launcher is visible in the
 bottom-right corner on both mobile and desktop; tap it to toggle the interface.
