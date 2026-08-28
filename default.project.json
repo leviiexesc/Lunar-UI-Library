@@ -1,0 +1,27 @@
+{
+  "name": "LunarUI",
+  "tree": {
+    "$className": "DataModel",
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "LunarUIExample": {
+          "$path": "Example.luau"
+        }
+      }
+    },
+    "ReplicatedStorage": {
+      "LunarUI": {
+        "$path": "LunarUI.lua"
+      },
+      "LunarUIAddons": {
+        "$className": "Folder",
+        "SaveManager": {
+          "$path": "Addons/SaveManager.lua"
+        },
+        "InterfaceManager": {
+          "$path": "Addons/InterfaceManager.lua"
+        }
+      }
+    }
+  }
+}
