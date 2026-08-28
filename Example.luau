@@ -1,12 +1,16 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local LunarUI = require(ReplicatedStorage:WaitForChild("LunarUI"))
-local Addons = ReplicatedStorage:WaitForChild("LunarUIAddons")
-local SaveManager = require(Addons:WaitForChild("SaveManager"))
-local InterfaceManager = require(Addons:WaitForChild("InterfaceManager"))
+local LunarUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/leviiexesc/Lunar-UI-Library/refs/heads/main/LunarUI.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/leviiexesc/Lunar-UI-Library/refs/heads/main/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/leviiexesc/Lunar-UI-Library/refs/heads/main/Addons/InterfaceManager.lua"))()
 
--- Register your Roblox-hosted Lucide icon assets once, then use their Lucide names.
--- LunarUI:RegisterIcon("settings", "rbxassetid://123456789")
--- LunarUI:RegisterIcon("home", "rbxassetid://123456789")
+-- Register your Roblox-uploaded Lucide assets once. The keys are exact names
+-- from https://lucide.dev/icons/ and can be used in Icon = "..." below.
+--[[
+LunarUI:SetLucideIconProvider({
+    home = "rbxassetid://YOUR_HOME_LUCIDE_ASSET_ID",
+    settings = "rbxassetid://YOUR_SETTINGS_LUCIDE_ASSET_ID",
+})
+]]
 
 local Window = LunarUI:CreateWindow({
     Title = "Lunar UI",

@@ -41,6 +41,15 @@ function InterfaceManager:BuildInterfaceSection(tab, window)
             if self.Library then self.Library:SetAnimationsEnabled(enabled) end
         end,
     })
+    section:AddDropdown("LunarMotionStyle", {
+        Title = "Motion style",
+        Description = "Fluid uses a subtle mobile-style spring effect.",
+        Values = { "Fluid", "Soft", "Fast" },
+        Default = self.Library and self.Library.AnimationStyle or "Fluid",
+        Callback = function(style)
+            if self.Library then self.Library:SetAnimationStyle(style) end
+        end,
+    })
     section:AddKeybind("LunarToggleKey", {
         Title = "Toggle interface",
         Description = "Show or hide the Lunar UI window.",

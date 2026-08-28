@@ -47,14 +47,15 @@ Features:AddToggle({
 
 ## Lucide-style icons
 
-Lunar UI accepts icon names in AddTab. Register the Lucide names you use to Roblox
-image asset IDs, or set a resolver for your own icon bundle:
+Lunar UI accepts Lucide icon names in AddTab. Lucide distributes SVG icons, while
+Roblox ImageLabels require Roblox-hosted image assets. Upload the Lucide SVG/PNG
+assets to Roblox once, then map the original Lucide names to their asset IDs:
 
 ```lua
-LunarUI:RegisterIcon("settings", "rbxassetid://123456789")
-LunarUI:SetIconProvider(function(name)
-    return MyIconAssets[name]
-end)
+LunarUI:SetLucideIconProvider({
+    settings = "rbxassetid://123456789",
+    home = "rbxassetid://987654321",
+})
 
 Window:AddTab({ Title = "Settings", Icon = "settings" })
 ```
@@ -76,6 +77,9 @@ The interface settings include a Smooth animations toggle. When disabled, Lunar 
 applies UI changes immediately. A small moon launcher is visible in the
 bottom-right corner on both mobile and desktop; tap it to toggle the interface.
 Set Launcher = false in CreateWindow if you do not want this shortcut.
+
+Use `LunarUI:SetAnimationStyle("Fluid")` for the default spring-like mobile
+motion, `"Soft"` for gentler easing, or `"Fast"` for quick utility menus.
 
 ## Project layout
 
