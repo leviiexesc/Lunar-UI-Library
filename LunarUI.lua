@@ -20,16 +20,34 @@ LunarUI.Lucide = {}
 
 local Themes = {
     Dark = {
-        Background = Color3.fromRGB(2, 6, 12), Surface = Color3.fromRGB(7, 13, 23),
-        SurfaceHover = Color3.fromRGB(13, 25, 41), Border = Color3.fromRGB(27, 48, 73),
-        Text = Color3.fromRGB(240, 248, 255), Muted = Color3.fromRGB(132, 157, 181),
-        Accent = Color3.fromRGB(0, 153, 255), AccentSoft = Color3.fromRGB(0, 70, 140),
+        Background = Color3.fromRGB(5, 5, 7), Surface = Color3.fromRGB(15, 15, 18),
+        SurfaceHover = Color3.fromRGB(31, 31, 36), Border = Color3.fromRGB(65, 65, 73),
+        Text = Color3.fromRGB(248, 248, 250), Muted = Color3.fromRGB(166, 166, 176),
+        Accent = Color3.fromRGB(238, 238, 243), AccentSoft = Color3.fromRGB(63, 63, 72), AccentText = Color3.fromRGB(8, 8, 10),
     },
     Light = {
         Background = Color3.fromRGB(238, 239, 247), Surface = Color3.fromRGB(255, 255, 255),
         SurfaceHover = Color3.fromRGB(241, 242, 249), Border = Color3.fromRGB(211, 214, 229),
         Text = Color3.fromRGB(30, 33, 48), Muted = Color3.fromRGB(102, 109, 132),
-        Accent = Color3.fromRGB(0, 122, 214), AccentSoft = Color3.fromRGB(203, 231, 255),
+        Accent = Color3.fromRGB(28, 28, 32), AccentSoft = Color3.fromRGB(221, 221, 226), AccentText = Color3.fromRGB(255, 255, 255),
+    },
+    Halloween = {
+        Background = Color3.fromRGB(10, 10, 12), Surface = Color3.fromRGB(22, 22, 25),
+        SurfaceHover = Color3.fromRGB(42, 42, 47), Border = Color3.fromRGB(80, 80, 88),
+        Text = Color3.fromRGB(250, 247, 243), Muted = Color3.fromRGB(187, 182, 176),
+        Accent = Color3.fromRGB(242, 239, 233), AccentSoft = Color3.fromRGB(67, 65, 62), AccentText = Color3.fromRGB(10, 10, 12),
+    },
+    Christmas = {
+        Background = Color3.fromRGB(7, 9, 8), Surface = Color3.fromRGB(18, 21, 19),
+        SurfaceHover = Color3.fromRGB(35, 40, 37), Border = Color3.fromRGB(70, 78, 73),
+        Text = Color3.fromRGB(247, 251, 248), Muted = Color3.fromRGB(177, 188, 181),
+        Accent = Color3.fromRGB(244, 248, 245), AccentSoft = Color3.fromRGB(58, 67, 61), AccentText = Color3.fromRGB(8, 10, 9),
+    },
+    Summer = {
+        Background = Color3.fromRGB(231, 231, 233), Surface = Color3.fromRGB(252, 252, 253),
+        SurfaceHover = Color3.fromRGB(222, 222, 226), Border = Color3.fromRGB(176, 176, 184),
+        Text = Color3.fromRGB(31, 31, 35), Muted = Color3.fromRGB(103, 103, 112),
+        Accent = Color3.fromRGB(36, 36, 40), AccentSoft = Color3.fromRGB(207, 207, 213), AccentText = Color3.fromRGB(255, 255, 255),
     },
 }
 
@@ -46,6 +64,15 @@ end
 
 local function stroke(parent, color, transparency)
     return make("UIStroke", { Color = color, Transparency = transparency or 0, Thickness = 1 }, parent)
+end
+
+local function glow(parent, color, transparency)
+    local effect = parent:FindFirstChild("LunarGlow")
+    if not effect then
+        effect = make("UIStroke", { Name = "LunarGlow", Thickness = 2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }, parent)
+    end
+    effect.Color, effect.Transparency = color, transparency or .45
+    return effect
 end
 
 local function padding(parent, amount)
@@ -257,12 +284,71 @@ function LunarUI:CreateIconFallback(parent, name, color, position, size, zIndex)
     return holder
 end
 
+local function createCursor(gui, color, assetId)
+    local cursor = make("Frame", { Name = "LunarCursor", BackgroundTransparency = 1, Size = UDim2.fromOffset(24, 24), ZIndex = 500 }, gui)
+    if assetId then
+        make("ImageLabel", { BackgroundTransparency = 1, Image = tostring(assetId):find("rbxassetid://") and assetId or "rbxassetid://" .. assetId, ImageColor3 = color, Size = UDim2.fromScale(1, 1), ZIndex = 501 }, cursor)
+    else
+        local pointer = make("Frame", { BackgroundColor3 = color, BorderSizePixel = 0, Position = UDim2.fromOffset(3, 2), Size = UDim2.fromOffset(5, 17), Rotation = -38, ZIndex = 501 }, cursor)
+        corner(pointer, 3)
+        local ring = make("Frame", { BackgroundColor3 = color, BackgroundTransparency = .12, BorderSizePixel = 0, Position = UDim2.fromOffset(9, 12), Size = UDim2.fromOffset(10, 10), ZIndex = 501 }, cursor)
+        corner(ring, 10)
+    end
+    return cursor
+end
+
+local function createSeasonalEffects(gui, themeName, theme)
+    if themeName ~= "Halloween" and themeName ~= "Christmas" then return nil end
+    local layer = make("Frame", {
+        Name = "LunarSeasonalEffects", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1),
+        ZIndex = 0, ClipsDescendants = true,
+    }, gui)
+    local count = themeName == "Christmas" and 30 or 22
+    for index = 1, count do
+        local snow = themeName == "Christmas"
+        local particle = make("Frame", {
+            BackgroundColor3 = snow and Color3.fromRGB(250, 250, 252) or (index % 2 == 0 and theme.Accent or Color3.fromRGB(155, 155, 164)),
+            BackgroundTransparency = snow and .22 or .35, BorderSizePixel = 0,
+            Position = UDim2.fromScale(math.random(), -math.random(5, 100) / 100),
+            Size = snow and UDim2.fromOffset(math.random(2, 5), math.random(2, 5)) or UDim2.fromOffset(2, math.random(9, 18)),
+            ZIndex = 0,
+        }, layer)
+        if snow then corner(particle, 10) end
+        task.spawn(function()
+            while particle.Parent do
+                local startX = math.random(0, 100) / 100
+                particle.Position = UDim2.fromScale(startX, -.08)
+                local duration = snow and math.random(32, 54) / 10 or math.random(15, 28) / 10
+                if LunarUI.AnimationsEnabled then
+                    tween(particle, { Position = UDim2.fromScale(math.clamp(startX + (snow and math.random(-10, 10) / 100 or 0), 0, 1), 1.08) }, duration)
+                    task.wait(duration)
+                else
+                    particle.Position = UDim2.fromScale(startX, 1.08)
+                    task.wait(.35)
+                end
+            end
+        end)
+    end
+    return layer
+end
+
 function LunarUI:CreateWindow(options)
     options = options or {}
-    local themeName = options.Theme == "Light" and "Light" or "Dark"
+    local themeName = Themes[options.Theme] and options.Theme or "Dark"
     local theme = Themes[themeName]
     local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
     local gui = make("ScreenGui", { Name = "LunarUI", ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling }, playerGui)
+    local seasonalEffects = createSeasonalEffects(gui, themeName, theme)
+    local cursor
+    if options.CustomCursor ~= false and UserInputService.MouseEnabled then
+        cursor = createCursor(gui, theme.Accent, options.CursorIcon)
+        UserInputService.MouseIconEnabled = false
+        UserInputService.InputChanged:Connect(function(input)
+            if cursor and cursor.Parent and input.UserInputType == Enum.UserInputType.MouseMovement then
+                cursor.Position = UDim2.fromOffset(input.Position.X, input.Position.Y)
+            end
+        end)
+    end
     local scale = make("UIScale", { Scale = 0.92 }, gui)
     local root = make("Frame", {
         Name = "Window", Size = UDim2.fromOffset(options.Width or 760, options.Height or 500),
@@ -270,6 +356,7 @@ function LunarUI:CreateWindow(options)
         BackgroundColor3 = theme.Background, BackgroundTransparency = .08, BorderSizePixel = 0,
     }, gui)
     corner(root, 13); stroke(root, theme.Border, .18)
+    glow(root, theme.Accent, .72)
     local rootGradient = make("UIGradient", {
         Name = "LunarGlassGradient",
         Rotation = 28,
@@ -342,7 +429,7 @@ function LunarUI:CreateWindow(options)
     local contentLayout = make("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }, content)
     contentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() content.CanvasSize = UDim2.fromOffset(0, contentLayout.AbsoluteContentSize.Y + 36) end)
     bindDrag(topbar, root)
-    local window = setmetatable({ Gui = gui, Root = root, Launcher = launcher, Body = body, Sidebar = sidebar, Content = content, Profile = profile, Avatar = avatar, ProfileName = profileName, ProfileUsername = profileUsername, Theme = theme, ThemeName = themeName, Tabs = {}, Values = {}, Flags = {}, _activeTab = nil }, LunarUI)
+    local window = setmetatable({ Gui = gui, Root = root, Cursor = cursor, CursorIcon = options.CursorIcon, SeasonalEffects = seasonalEffects, Body = body, Launcher = launcher, Sidebar = sidebar, Content = content, Profile = profile, Avatar = avatar, ProfileName = profileName, ProfileUsername = profileUsername, Theme = theme, ThemeName = themeName, Tabs = {}, Values = {}, Flags = {}, _activeTab = nil }, LunarUI)
     tween(scale, { Scale = 1 }, .35)
     minimize.MouseButton1Click:Connect(function()
         body.Visible = not body.Visible
@@ -394,9 +481,15 @@ function LunarUI:AddTab(options)
     local page = make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 1), Visible = false, AutomaticSize = Enum.AutomaticSize.Y }, self.Content)
     local layout = make("UIListLayout", { Padding = UDim.new(0, 11), SortOrder = Enum.SortOrder.LayoutOrder }, page)
     local function select()
-        for _, item in pairs(self.Tabs) do item.Page.Visible = false; tween(item.Nav, { BackgroundTransparency = 1, TextColor3 = self.Theme.Muted }, .15) end
+        for _, item in pairs(self.Tabs) do
+            item.Page.Visible = false
+            tween(item.Nav, { BackgroundTransparency = 1, TextColor3 = self.Theme.Muted }, .15)
+            local previousGlow = item.Nav:FindFirstChild("LunarGlow")
+            if previousGlow then tween(previousGlow, { Transparency = 1 }, .15) end
+        end
         page.Visible = true
         tween(nav, { BackgroundColor3 = self.Theme.AccentSoft, BackgroundTransparency = 0, TextColor3 = self.Theme.Text }, .15)
+        glow(nav, self.Theme.Accent, .48)
         pop(nav, 1.045, .16)
         appear(page)
         for index, child in ipairs(page:GetChildren()) do
@@ -434,7 +527,8 @@ end
 function LunarUI:AddButton(options)
     options = options or {}
     local row = self:_row(options.Title or "Button", options.Description)
-    local action = button(row, options.ButtonText or "Execute", self.Window.Theme, { Position = UDim2.new(1, -112, .5, -14), Size = UDim2.fromOffset(112, 28), BackgroundColor3 = self.Window.Theme.Accent, TextColor3 = Color3.new(1,1,1) })
+    local action = button(row, options.ButtonText or "Execute", self.Window.Theme, { Position = UDim2.new(1, -112, .5, -14), Size = UDim2.fromOffset(112, 28), BackgroundColor3 = self.Window.Theme.Accent, TextColor3 = self.Window.Theme.AccentText or Color3.new(1,1,1) })
+    glow(action, self.Window.Theme.Accent, .34)
     action.MouseButton1Click:Connect(function() if options.Callback then options.Callback() end end)
     return action
 end
@@ -537,7 +631,7 @@ function LunarUI:SetTheme(name)
     local nextTheme = Themes[name]
     if not nextTheme then return false, "Unknown theme: " .. tostring(name) end
     local previous = self.Theme
-    local properties = { "BackgroundColor3", "TextColor3", "ImageColor3", "ScrollBarImageColor3" }
+    local properties = { "BackgroundColor3", "TextColor3", "ImageColor3", "ScrollBarImageColor3", "Color" }
     for _, object in ipairs(self.Gui:GetDescendants()) do
         for _, property in ipairs(properties) do
             local ok, current = pcall(function() return object[property] end)
@@ -558,6 +652,8 @@ function LunarUI:SetTheme(name)
             ColorSequenceKeypoint.new(1, nextTheme.SurfaceHover),
         })
     end
+    if self.SeasonalEffects then self.SeasonalEffects:Destroy(); self.SeasonalEffects = nil end
+    self.SeasonalEffects = createSeasonalEffects(self.Gui, name, nextTheme)
     self.Theme, self.ThemeName = nextTheme, name
     self.Values["LunarTheme"] = name
     return true
@@ -585,6 +681,23 @@ function LunarUI:SetProfileNameVisible(visible)
     end
     return visible
 end
+function LunarUI:SetCustomCursor(enabled, assetId)
+    if self.Cursor then self.Cursor:Destroy(); self.Cursor = nil end
+    if enabled ~= false and UserInputService.MouseEnabled then
+        self.Cursor = createCursor(self.Gui, self.Theme.Accent, assetId or self.CursorIcon)
+        self.CursorIcon = assetId or self.CursorIcon
+        UserInputService.MouseIconEnabled = false
+        local activeCursor = self.Cursor
+        UserInputService.InputChanged:Connect(function(input)
+            if activeCursor.Parent and input.UserInputType == Enum.UserInputType.MouseMovement then
+                activeCursor.Position = UDim2.fromOffset(input.Position.X, input.Position.Y)
+            end
+        end)
+    else
+        UserInputService.MouseIconEnabled = true
+    end
+    return self.Cursor
+end
 function LunarUI:SetAnimationStyle(style)
     assert(style == "Fluid" or style == "Soft" or style == "Fast", "Animation style must be Fluid, Soft, or Fast.")
     self.AnimationStyle = style
@@ -608,7 +721,7 @@ function LunarUI:Dialog(options)
     end
     return dialog
 end
-function LunarUI:Destroy() self.Unloaded=true; self.Gui:Destroy() end
+function LunarUI:Destroy() self.Unloaded=true; UserInputService.MouseIconEnabled=true; self.Gui:Destroy() end
 
 -- Fluent-like ergonomic option objects, implemented specifically for Lunar UI.
 LunarUI.Options = LunarUI.Options or {}

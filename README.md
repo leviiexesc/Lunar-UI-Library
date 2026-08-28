@@ -85,6 +85,22 @@ Every Lunar button uses press and pop feedback, and selected tabs/sections anima
 into view. In the Interface section, **Show profile name** hides or shows the
 DisplayName and @Username while leaving the Roblox avatar visible.
 
+## Cursor and seasonal themes
+
+```lua
+local Window = LunarUI:CreateWindow({
+    Theme = "Halloween", -- Dark, Light, Halloween, Christmas, Summer
+    CustomCursor = true,
+    CursorIcon = "rbxassetid://123456789", -- optional
+})
+
+Window:SetCustomCursor(false) -- restores Roblox's default mouse cursor
+```
+
+Halloween adds animated orange/purple falling rain streaks; Christmas adds
+animated falling snow. Both effects update automatically when you call
+Window:SetTheme().
+
 ## Project layout
 
 ```text

@@ -29,7 +29,7 @@ function InterfaceManager:BuildInterfaceSection(tab, window)
     section:AddDropdown("LunarTheme", {
         Title = "Theme",
         Description = "Choose your preferred Lunar UI appearance.",
-        Values = { "Dark", "Light" },
+        Values = { "Dark", "Light", "Halloween", "Christmas", "Summer" },
         Default = window.ThemeName,
         Callback = function(theme) window:SetTheme(theme) end,
     })

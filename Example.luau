@@ -17,6 +17,7 @@ local Window = LunarUI:CreateWindow({
     Subtitle = "Roblox UI Library",
     Theme = "Dark",
     LauncherIcon = "home",
+    CustomCursor = true,
 })
 
 local Main = Window:AddTab({ Title = "Main", Icon = "home" })
