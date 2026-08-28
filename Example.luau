@@ -6,14 +6,16 @@ local InterfaceManager = require(Addons:WaitForChild("InterfaceManager"))
 
 -- Register your Roblox-hosted Lucide icon assets once, then use their Lucide names.
 -- LunarUI:RegisterIcon("settings", "rbxassetid://123456789")
+-- LunarUI:RegisterIcon("home", "rbxassetid://123456789")
 
 local Window = LunarUI:CreateWindow({
     Title = "Lunar UI",
     Subtitle = "Roblox UI Library",
     Theme = "Dark",
+    LauncherIcon = "home",
 })
 
-local Main = Window:AddTab({ Title = "Main", Icon = "☾" })
+local Main = Window:AddTab({ Title = "Main", Icon = "home" })
 local Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 local Features = Main:AddSection({ Title = "Features" })
 

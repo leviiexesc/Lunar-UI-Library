@@ -59,6 +59,10 @@ end)
 Window:AddTab({ Title = "Settings", Icon = "settings" })
 ```
 
+Each Lunar UI window automatically shows the local Roblox player's avatar,
+DisplayName, and @Username in its sidebar. The compact bottom-right launcher
+uses the named `home` icon when it has been registered.
+
 See [Example.luau](Example.luau) for a complete client-side starting point.
 
 ## Addons
@@ -69,9 +73,9 @@ those APIs are provided by the target environment. Addons/InterfaceManager.lua
 builds a Settings tab with theme and interface-toggle controls.
 
 The interface settings include a Smooth animations toggle. When disabled, Lunar UI
-applies UI changes immediately. Closing a window hides it and reveals a small
-moon launcher in the bottom-right corner; tap it to reopen the interface on
-mobile or desktop.
+applies UI changes immediately. A small moon launcher is visible in the
+bottom-right corner on both mobile and desktop; tap it to toggle the interface.
+Set Launcher = false in CreateWindow if you do not want this shortcut.
 
 ## Project layout
 

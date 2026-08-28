@@ -19,10 +19,10 @@ LunarUI.IconProvider = nil
 
 local Themes = {
     Dark = {
-        Background = Color3.fromRGB(8, 10, 17), Surface = Color3.fromRGB(15, 19, 29),
-        SurfaceHover = Color3.fromRGB(25, 30, 44), Border = Color3.fromRGB(43, 49, 65),
-        Text = Color3.fromRGB(243, 244, 248), Muted = Color3.fromRGB(148, 155, 174),
-        Accent = Color3.fromRGB(139, 92, 246), AccentSoft = Color3.fromRGB(89, 52, 172),
+        Background = Color3.fromRGB(2, 6, 12), Surface = Color3.fromRGB(7, 13, 23),
+        SurfaceHover = Color3.fromRGB(13, 25, 41), Border = Color3.fromRGB(27, 48, 73),
+        Text = Color3.fromRGB(240, 248, 255), Muted = Color3.fromRGB(132, 157, 181),
+        Accent = Color3.fromRGB(0, 153, 255), AccentSoft = Color3.fromRGB(0, 70, 140),
     },
     Light = {
         Background = Color3.fromRGB(238, 239, 247), Surface = Color3.fromRGB(255, 255, 255),
@@ -84,6 +84,13 @@ local function button(parent, label, theme, props)
     props.AutoButtonColor = false
     local item = make("TextButton", props, parent)
     corner(item, props.Radius or 7)
+    local restingColor, restingTransparency = item.BackgroundColor3, item.BackgroundTransparency
+    item.MouseEnter:Connect(function()
+        if restingTransparency < 1 then tween(item, { BackgroundColor3 = restingColor:Lerp(theme.Accent, .15) }, .14) end
+    end)
+    item.MouseLeave:Connect(function()
+        if restingTransparency < 1 then tween(item, { BackgroundColor3 = restingColor }, .18) end
+    end)
     return item
 end
 
@@ -156,13 +163,41 @@ function LunarUI:CreateWindow(options)
         BackgroundColor3 = theme.Background, BorderSizePixel = 0,
     }, gui)
     corner(root, 13); stroke(root, theme.Border, .18)
+    make("UIGradient", {
+        Rotation = 24,
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(1, 4, 9)),
+            ColorSequenceKeypoint.new(.53, Color3.fromRGB(3, 12, 23)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(1, 5, 10)),
+        }),
+    }, root)
+    local waves = make("Frame", { Name = "BlueWaveBackdrop", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ClipsDescendants = true, ZIndex = 0 }, root)
+    for index = 1, 3 do
+        local wave = make("Frame", {
+            BackgroundColor3 = theme.Accent, BackgroundTransparency = .92 + index * .02,
+            BorderSizePixel = 0, AnchorPoint = Vector2.new(.5, .5),
+            Position = UDim2.new(.65 + index * .08, 0, .95 - index * .08, 0),
+            Size = UDim2.new(1.45, 0, 0, 78 + index * 22), Rotation = -11,
+            ZIndex = 0,
+        }, waves)
+        corner(wave, 100)
+        stroke(wave, Color3.fromRGB(53, 181, 255), .82)
+    end
     local launcher = make("TextButton", {
-        Name = "LunarLauncher", Text = "☾", TextSize = 25, Font = Enum.Font.GothamBold,
+        Name = "LunarLauncher", Text = "⌂", TextSize = 21, Font = Enum.Font.GothamBold,
         TextColor3 = Color3.new(1, 1, 1), BackgroundColor3 = theme.Accent,
-        AutoButtonColor = false, Visible = false, AnchorPoint = Vector2.new(1, 1),
-        Position = UDim2.new(1, -18, 1, -18), Size = UDim2.fromOffset(42, 42), ZIndex = 20,
+        AutoButtonColor = false, Visible = options.Launcher ~= false, AnchorPoint = Vector2.new(1, 1),
+        Position = UDim2.new(1, -18, 1, -18), Size = UDim2.fromOffset(42, 42), ZIndex = 100,
     }, gui)
     corner(launcher, 21); stroke(launcher, Color3.new(1, 1, 1), .72)
+    local launcherIcon = LunarUI:GetIcon(options.LauncherIcon or "home")
+    if launcherIcon then
+        launcher.Text = ""
+        LunarUI:CreateIcon(launcher, options.LauncherIcon or "home", {
+            Color = Color3.new(1, 1, 1), Size = UDim2.fromOffset(19, 19),
+            Position = UDim2.fromOffset(11, 11), ZIndex = 101,
+        })
+    end
     make("ImageLabel", { BackgroundTransparency = 1, Image = "rbxassetid://5028857084", ImageColor3 = Color3.new(0, 0, 0), ImageTransparency = .72, Size = UDim2.fromScale(1, 1), ZIndex = 0 }, root)
     local topbar = make("Frame", { BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 56) }, root)
     corner(topbar, 13)
@@ -179,6 +214,27 @@ function LunarUI:CreateWindow(options)
     local body = make("Frame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 56), Size = UDim2.new(1, 0, 1, -56), ClipsDescendants = true }, root)
     local sidebar = make("Frame", { BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.new(0, 165, 1, 0) }, body)
     local sideLayout = make("UIListLayout", { Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder }, sidebar); padding(sidebar, 10)
+    local profile = make("Frame", { Name = "PlayerProfile", BackgroundColor3 = theme.Background, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 48), LayoutOrder = -10 }, sidebar)
+    corner(profile, 8); stroke(profile, theme.Border, .35)
+    local avatar = make("ImageLabel", {
+        Name = "Avatar", BackgroundColor3 = theme.AccentSoft, BorderSizePixel = 0,
+        Position = UDim2.fromOffset(7, 7), Size = UDim2.fromOffset(34, 34),
+        Image = "", ScaleType = Enum.ScaleType.Crop,
+    }, profile)
+    corner(avatar, 17)
+    local localPlayer = Players.LocalPlayer
+    text(profile, localPlayer.DisplayName, 10, theme.Text, {
+        Position = UDim2.fromOffset(49, 7), Size = UDim2.new(1, -56, 0, 16), Font = Enum.Font.GothamBold,
+    })
+    text(profile, "@" .. localPlayer.Name, 8, theme.Muted, {
+        Position = UDim2.fromOffset(49, 23), Size = UDim2.new(1, -56, 0, 15),
+    })
+    task.spawn(function()
+        local ok, image = pcall(function()
+            return Players:GetUserThumbnailAsync(localPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+        end)
+        if ok and avatar.Parent then avatar.Image = image end
+    end)
     local content = make("ScrollingFrame", { BackgroundTransparency = 1, BorderSizePixel = 0, Position = UDim2.new(0, 165, 0, 0), Size = UDim2.new(1, -165, 1, 0), ScrollBarThickness = 3, ScrollBarImageColor3 = theme.Accent, CanvasSize = UDim2.new() }, body)
     padding(content, 18)
     local contentLayout = make("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }, content)
@@ -197,13 +253,15 @@ function LunarUI:CreateWindow(options)
         task.delay(LunarUI.AnimationsEnabled and .2 or 0, function()
             if not root.Parent then return end
             root.Visible = false
-            launcher.Visible = true
             tween(launcher, { BackgroundColor3 = window.Theme.Accent }, .15)
         end)
     end
     close.MouseButton1Click:Connect(hideWindow)
     launcher.MouseButton1Click:Connect(function()
-        launcher.Visible = false
+        if root.Visible then
+            hideWindow()
+            return
+        end
         root.Visible = true
         scale.Scale = .92
         tween(scale, { Scale = 1 }, .24)
@@ -217,7 +275,7 @@ function LunarUI:AddTab(options)
     local tab = setmetatable({ Window = self, Sections = {} }, { __index = LunarUI })
     local title = options.Title or "Tab"
     local iconAsset = LunarUI:GetIcon(options.Icon)
-    local nav = button(self.Sidebar, iconAsset and title or (options.Icon and options.Icon .. "  " or "") .. title, self.Theme, { Size = UDim2.new(1, 0, 0, 34), BackgroundTransparency = 1, TextColor3 = self.Theme.Muted, LayoutOrder = #self.Tabs + 1, TextXAlignment = Enum.TextXAlignment.Left })
+    local nav = button(self.Sidebar, title, self.Theme, { Size = UDim2.new(1, 0, 0, 34), BackgroundTransparency = 1, TextColor3 = self.Theme.Muted, LayoutOrder = #self.Tabs + 1, TextXAlignment = Enum.TextXAlignment.Left })
     if iconAsset then
         nav.TextXAlignment = Enum.TextXAlignment.Left
         nav.Text = "      " .. title
@@ -295,11 +353,14 @@ end
 function LunarUI:AddDropdown(options)
     options = options or {}; local values, selected = options.Values or {}, options.Default; local row = self:_row(options.Title or "Dropdown", options.Description)
     local selector = button(row, selected or "Select...", self.Window.Theme, { Position = UDim2.new(1,-150,.5,-14), Size = UDim2.fromOffset(150,28), BackgroundColor3 = self.Window.Theme.Background, TextColor3 = self.Window.Theme.Muted })
-    local list = make("Frame", { Visible=false, BackgroundColor3=self.Window.Theme.SurfaceHover, BorderSizePixel=0, Position=UDim2.new(1,-150,1,3), Size=UDim2.fromOffset(150,#values*27+8), ZIndex=8 }, row); corner(list,7); stroke(list,self.Window.Theme.Border,.2); padding(list,4)
+    local list = make("Frame", { Name="LunarDropdownOverlay", Visible=false, BackgroundColor3=self.Window.Theme.SurfaceHover, BorderSizePixel=0, Size=UDim2.fromOffset(150,#values*27+8), ZIndex=50 }, self.Window.Gui); corner(list,7); stroke(list,self.Window.Theme.Border,.2); padding(list,4)
     local listLayout = make("UIListLayout",{Padding=UDim.new(0,2)},list)
     local function choose(value) selected=value; selector.Text=value; list.Visible=false; self.Window.Values[options.Flag or options.Title]=value; if options.Callback then options.Callback(value) end end
-    for _, value in ipairs(values) do local choice=button(list,tostring(value),self.Window.Theme,{Size=UDim2.new(1,0,0,25),BackgroundTransparency=1,TextColor3=self.Window.Theme.Text,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=9}); choice.MouseButton1Click:Connect(function() choose(value) end) end
-    selector.MouseButton1Click:Connect(function() list.Visible=not list.Visible end); return { Set=choose, Value=function() return selected end }
+    for _, value in ipairs(values) do local choice=button(list,tostring(value),self.Window.Theme,{Size=UDim2.new(1,0,0,25),BackgroundTransparency=1,TextColor3=self.Window.Theme.Text,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=51}); choice.MouseButton1Click:Connect(function() choose(value) end) end
+    selector.MouseButton1Click:Connect(function()
+        list.Position=UDim2.fromOffset(selector.AbsolutePosition.X,selector.AbsolutePosition.Y+selector.AbsoluteSize.Y+4)
+        list.Visible=not list.Visible
+    end); return { Set=choose, Value=function() return selected end }
 end
 
 function LunarUI:AddMultiDropdown(options)
@@ -429,11 +490,14 @@ function LunarUI:AddMultiDropdown(flag,options)
     if type(options.Default)=="table" then for key,value in pairs(options.Default) do selected[type(key)=="number" and value or key]=type(key)=="number" and true or value end end
     local values=options.Values or {};local row=self:_row(options.Title or flag,options.Description)
     local selector=button(row,"Select...",self.Window.Theme,{Position=UDim2.new(1,-150,.5,-14),Size=UDim2.fromOffset(150,28),BackgroundColor3=self.Window.Theme.Background,TextColor3=self.Window.Theme.Muted})
-    local list=make("Frame",{Visible=false,BackgroundColor3=self.Window.Theme.SurfaceHover,BorderSizePixel=0,Position=UDim2.new(1,-150,1,3),Size=UDim2.fromOffset(150,math.min(#values,6)*27+8),ZIndex=8,ClipsDescendants=true},row);corner(list,7);stroke(list,self.Window.Theme.Border,.2);padding(list,4);make("UIListLayout",{Padding=UDim.new(0,2)},list)
+    local list=make("Frame",{Name="LunarMultiDropdownOverlay",Visible=false,BackgroundColor3=self.Window.Theme.SurfaceHover,BorderSizePixel=0,Size=UDim2.fromOffset(150,math.min(#values,6)*27+8),ZIndex=50,ClipsDescendants=true},self.Window.Gui);corner(list,7);stroke(list,self.Window.Theme.Border,.2);padding(list,4);make("UIListLayout",{Padding=UDim.new(0,2)},list)
     local api
     local function render() local parts={};for _,value in ipairs(values)do if selected[value]then table.insert(parts,tostring(value))end end;selector.Text=#parts>0 and table.concat(parts,", ")or"Select...";self.Window.Values[flag]=selected;if options.Callback then options.Callback(selected)end;if api then api:_emit(selected)end end
-    for _,value in ipairs(values)do local item=button(list,(selected[value]and"✓  "or"   ")..tostring(value),self.Window.Theme,{Size=UDim2.new(1,0,0,25),BackgroundTransparency=1,TextColor3=self.Window.Theme.Text,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=9});item.MouseButton1Click:Connect(function()selected[value]=not selected[value];item.Text=(selected[value]and"✓  "or"   ")..tostring(value);render()end)end
-    selector.MouseButton1Click:Connect(function()list.Visible=not list.Visible end)
+    for _,value in ipairs(values)do local item=button(list,(selected[value]and"✓  "or"   ")..tostring(value),self.Window.Theme,{Size=UDim2.new(1,0,0,25),BackgroundTransparency=1,TextColor3=self.Window.Theme.Text,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=51});item.MouseButton1Click:Connect(function()selected[value]=not selected[value];item.Text=(selected[value]and"✓  "or"   ")..tostring(value);render()end)end
+    selector.MouseButton1Click:Connect(function()
+        list.Position=UDim2.fromOffset(selector.AbsolutePosition.X,selector.AbsolutePosition.Y+selector.AbsoluteSize.Y+4)
+        list.Visible=not list.Visible
+    end)
     api=optionObject(flag,selected,function(value)selected=value or {};render()end);render();return api
 end
 function LunarUI:AddInput(flag,options)
