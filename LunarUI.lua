@@ -12,8 +12,10 @@ local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 
-local LunarUI = { Version = "1.0.0" }
+local LunarUI = { Version = "1.0.0", AnimationsEnabled = true }
 LunarUI.__index = LunarUI
+LunarUI.Icons = {}
+LunarUI.IconProvider = nil
 
 local Themes = {
     Dark = {
@@ -53,6 +55,10 @@ local function padding(parent, amount)
 end
 
 local function tween(object, properties, duration)
+    if not LunarUI.AnimationsEnabled then
+        for property, value in pairs(properties) do object[property] = value end
+        return
+    end
     TweenService:Create(object, TweenInfo.new(duration or .18, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), properties):Play()
 end
 
@@ -82,19 +88,59 @@ local function button(parent, label, theme, props)
 end
 
 local function bindDrag(handle, target)
-    local dragging, dragStart, startPosition
+    local dragging, activeInput, dragStart, startPosition
     handle.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging, dragStart, startPosition = true, input.Position, target.Position
-            input.Changed:Once(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+            dragging, activeInput, dragStart, startPosition = true, input, input.Position, target.Position
         end
     end)
     UserInputService.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input == activeInput) then
             local delta = input.Position - dragStart
             target.Position = UDim2.new(startPosition.X.Scale, startPosition.X.Offset + delta.X, startPosition.Y.Scale, startPosition.Y.Offset + delta.Y)
         end
     end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input == activeInput or (activeInput and activeInput.UserInputType == Enum.UserInputType.MouseButton1 and input.UserInputType == Enum.UserInputType.MouseButton1) then
+            dragging, activeInput = false, nil
+        end
+    end)
+end
+
+-- Lucide-style icon registry. Register Roblox asset IDs under Lucide icon names.
+-- Example: LunarUI:RegisterIcon("settings", "rbxassetid://123456789")
+function LunarUI:RegisterIcon(name, assetId)
+    assert(type(name) == "string", "Icon name must be a string.")
+    assert(type(assetId) == "string" or type(assetId) == "number", "Icon asset ID must be a string or number.")
+    self.Icons[string.lower(name)] = tostring(assetId):find("rbxassetid://") and tostring(assetId) or "rbxassetid://" .. tostring(assetId)
+    return self
+end
+
+function LunarUI:SetIconProvider(provider)
+    assert(type(provider) == "function" or provider == nil, "Icon provider must be a function or nil.")
+    self.IconProvider = provider
+    return self
+end
+
+function LunarUI:GetIcon(name)
+    if not name then return nil end
+    if type(name) == "number" or tostring(name):find("rbxassetid://") then return tostring(name):find("rbxassetid://") and tostring(name) or "rbxassetid://" .. tostring(name) end
+    local key = string.lower(tostring(name))
+    return self.Icons[key] or (self.IconProvider and self.IconProvider(key))
+end
+
+function LunarUI:CreateIcon(parent, name, options)
+    options = options or {}
+    local icon = Instance.new("ImageLabel")
+    icon.BackgroundTransparency = 1
+    icon.Image = self:GetIcon(name) or ""
+    icon.ImageColor3 = options.Color or Color3.new(1, 1, 1)
+    icon.ImageTransparency = options.Transparency or 0
+    icon.Size = options.Size or UDim2.fromOffset(16, 16)
+    icon.Position = options.Position or UDim2.new()
+    icon.ZIndex = options.ZIndex or 1
+    icon.Parent = parent
+    return icon
 end
 
 function LunarUI:CreateWindow(options)
@@ -110,6 +156,13 @@ function LunarUI:CreateWindow(options)
         BackgroundColor3 = theme.Background, BorderSizePixel = 0,
     }, gui)
     corner(root, 13); stroke(root, theme.Border, .18)
+    local launcher = make("TextButton", {
+        Name = "LunarLauncher", Text = "☾", TextSize = 25, Font = Enum.Font.GothamBold,
+        TextColor3 = Color3.new(1, 1, 1), BackgroundColor3 = theme.Accent,
+        AutoButtonColor = false, Visible = false, AnchorPoint = Vector2.new(1, 1),
+        Position = UDim2.new(1, -18, 1, -18), Size = UDim2.fromOffset(42, 42), ZIndex = 20,
+    }, gui)
+    corner(launcher, 21); stroke(launcher, Color3.new(1, 1, 1), .72)
     make("ImageLabel", { BackgroundTransparency = 1, Image = "rbxassetid://5028857084", ImageColor3 = Color3.new(0, 0, 0), ImageTransparency = .72, Size = UDim2.fromScale(1, 1), ZIndex = 0 }, root)
     local topbar = make("Frame", { BackgroundColor3 = theme.Surface, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 56) }, root)
     corner(topbar, 13)
@@ -131,7 +184,7 @@ function LunarUI:CreateWindow(options)
     local contentLayout = make("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }, content)
     contentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() content.CanvasSize = UDim2.fromOffset(0, contentLayout.AbsoluteContentSize.Y + 36) end)
     bindDrag(topbar, root)
-    local window = setmetatable({ Gui = gui, Root = root, Body = body, Sidebar = sidebar, Content = content, Theme = theme, ThemeName = themeName, Tabs = {}, Values = {}, Flags = {}, _activeTab = nil }, LunarUI)
+    local window = setmetatable({ Gui = gui, Root = root, Launcher = launcher, Body = body, Sidebar = sidebar, Content = content, Theme = theme, ThemeName = themeName, Tabs = {}, Values = {}, Flags = {}, _activeTab = nil }, LunarUI)
     tween(scale, { Scale = 1 }, .35)
     minimize.MouseButton1Click:Connect(function() body.Visible = not body.Visible; root.Size = UDim2.fromOffset(root.Size.X.Offset, body.Visible and (options.Height or 500) or 56) end)
     maximize.MouseButton1Click:Connect(function()
@@ -139,7 +192,23 @@ function LunarUI:CreateWindow(options)
         root:SetAttribute("Maximized", not maximized)
         tween(root, { Size = maximized and UDim2.fromOffset(options.Width or 760, options.Height or 500) or UDim2.new(.92, 0, .88, 0), Position = UDim2.fromScale(.5, .5) }, .28)
     end)
-    close.MouseButton1Click:Connect(function() tween(scale, { Scale = .92 }, .2); task.wait(.2); gui:Destroy() end)
+    local function hideWindow()
+        tween(scale, { Scale = .92 }, .2)
+        task.delay(LunarUI.AnimationsEnabled and .2 or 0, function()
+            if not root.Parent then return end
+            root.Visible = false
+            launcher.Visible = true
+            tween(launcher, { BackgroundColor3 = window.Theme.Accent }, .15)
+        end)
+    end
+    close.MouseButton1Click:Connect(hideWindow)
+    launcher.MouseButton1Click:Connect(function()
+        launcher.Visible = false
+        root.Visible = true
+        scale.Scale = .92
+        tween(scale, { Scale = 1 }, .24)
+    end)
+    window.Close = hideWindow
     return window
 end
 
@@ -147,7 +216,13 @@ function LunarUI:AddTab(options)
     options = options or {}
     local tab = setmetatable({ Window = self, Sections = {} }, { __index = LunarUI })
     local title = options.Title or "Tab"
-    local nav = button(self.Sidebar, (options.Icon and options.Icon .. "  " or "") .. title, self.Theme, { Size = UDim2.new(1, 0, 0, 34), BackgroundTransparency = 1, TextColor3 = self.Theme.Muted, LayoutOrder = #self.Tabs + 1 })
+    local iconAsset = LunarUI:GetIcon(options.Icon)
+    local nav = button(self.Sidebar, iconAsset and title or (options.Icon and options.Icon .. "  " or "") .. title, self.Theme, { Size = UDim2.new(1, 0, 0, 34), BackgroundTransparency = 1, TextColor3 = self.Theme.Muted, LayoutOrder = #self.Tabs + 1, TextXAlignment = Enum.TextXAlignment.Left })
+    if iconAsset then
+        nav.TextXAlignment = Enum.TextXAlignment.Left
+        nav.Text = "      " .. title
+        LunarUI:CreateIcon(nav, options.Icon, { Color = self.Theme.Muted, Size = UDim2.fromOffset(15, 15), Position = UDim2.fromOffset(12, 9), ZIndex = 2 })
+    end
     local page = make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 1), Visible = false, AutomaticSize = Enum.AutomaticSize.Y }, self.Content)
     local layout = make("UIListLayout", { Padding = UDim.new(0, 11), SortOrder = Enum.SortOrder.LayoutOrder }, page)
     local function select()
@@ -288,6 +363,10 @@ function LunarUI:SetTheme(name)
     self.Theme, self.ThemeName = nextTheme, name
     self.Values["LunarTheme"] = name
     return true
+end
+function LunarUI:SetAnimationsEnabled(enabled)
+    self.AnimationsEnabled = enabled ~= false
+    return self.AnimationsEnabled
 end
 function LunarUI:Toggle()
     self.Root.Visible = not self.Root.Visible

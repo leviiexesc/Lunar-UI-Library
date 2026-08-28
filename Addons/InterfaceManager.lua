@@ -33,6 +33,14 @@ function InterfaceManager:BuildInterfaceSection(tab, window)
         Default = window.ThemeName,
         Callback = function(theme) window:SetTheme(theme) end,
     })
+    section:AddToggle("LunarAnimations", {
+        Title = "Smooth animations",
+        Description = "Use tweens when opening, closing, and changing controls.",
+        Default = self.Library and self.Library.AnimationsEnabled ~= false,
+        Callback = function(enabled)
+            if self.Library then self.Library:SetAnimationsEnabled(enabled) end
+        end,
+    })
     section:AddKeybind("LunarToggleKey", {
         Title = "Toggle interface",
         Description = "Show or hide the Lunar UI window.",

@@ -4,6 +4,9 @@ local Addons = ReplicatedStorage:WaitForChild("LunarUIAddons")
 local SaveManager = require(Addons:WaitForChild("SaveManager"))
 local InterfaceManager = require(Addons:WaitForChild("InterfaceManager"))
 
+-- Register your Roblox-hosted Lucide icon assets once, then use their Lucide names.
+-- LunarUI:RegisterIcon("settings", "rbxassetid://123456789")
+
 local Window = LunarUI:CreateWindow({
     Title = "Lunar UI",
     Subtitle = "Roblox UI Library",
@@ -11,7 +14,7 @@ local Window = LunarUI:CreateWindow({
 })
 
 local Main = Window:AddTab({ Title = "Main", Icon = "☾" })
-local Settings = Window:AddTab({ Title = "Settings", Icon = "⚙" })
+local Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 local Features = Main:AddSection({ Title = "Features" })
 
 Features:AddButton({
@@ -65,3 +68,6 @@ SaveManager:BuildConfigSection(Settings)
 InterfaceManager:SetLibrary(LunarUI)
 InterfaceManager:SetWindow(Window)
 InterfaceManager:BuildInterfaceSection(Settings)
+
+-- The small crescent launcher appears when the user closes the window.
+-- Tap/click it to reopen Lunar UI; this is mobile-friendly by default.

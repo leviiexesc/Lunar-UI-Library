@@ -45,6 +45,20 @@ Features:AddToggle({
 - Buttons, toggles, checkboxes, sliders, dropdowns, multi-select dropdowns, and textboxes
 - Keybinds, color controls, labels, paragraphs, separators, images, progress bars, and search
 
+## Lucide-style icons
+
+Lunar UI accepts icon names in AddTab. Register the Lucide names you use to Roblox
+image asset IDs, or set a resolver for your own icon bundle:
+
+```lua
+LunarUI:RegisterIcon("settings", "rbxassetid://123456789")
+LunarUI:SetIconProvider(function(name)
+    return MyIconAssets[name]
+end)
+
+Window:AddTab({ Title = "Settings", Icon = "settings" })
+```
+
 See [Example.luau](Example.luau) for a complete client-side starting point.
 
 ## Addons
@@ -53,6 +67,11 @@ Addons/SaveManager.lua saves registered option values as JSON. Supply a storage
 adapter in ordinary Roblox projects, or it will use readfile / writefile when
 those APIs are provided by the target environment. Addons/InterfaceManager.lua
 builds a Settings tab with theme and interface-toggle controls.
+
+The interface settings include a Smooth animations toggle. When disabled, Lunar UI
+applies UI changes immediately. Closing a window hides it and reveals a small
+moon launcher in the bottom-right corner; tap it to reopen the interface on
+mobile or desktop.
 
 ## Project layout
 
