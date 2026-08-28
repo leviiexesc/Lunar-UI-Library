@@ -101,6 +101,26 @@ Halloween adds animated orange/purple falling rain streaks; Christmas adds
 animated falling snow. Both effects update automatically when you call
 Window:SetTheme().
 
+## Easy Lucide decal icons
+
+Upload the Lucide icon images you want as Roblox decals, then register them once:
+
+```lua
+LunarUI:RegisterLucideIcons({
+    home = "rbxassetid://123456789",
+    settings = "rbxassetid://987654321",
+    search = "rbxassetid://456789123",
+})
+
+Window:AddTab({ Title = "Home", Icon = "home" })
+```
+
+For your own image decal inside a section:
+
+```lua
+Section:AddDecal({ AssetId = 123456789, Height = 120 })
+```
+
 ## Project layout
 
 ```text

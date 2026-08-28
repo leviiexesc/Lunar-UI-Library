@@ -6,7 +6,7 @@ local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.
 -- Register your Roblox-uploaded Lucide assets once. The keys are exact names
 -- from https://lucide.dev/icons/ and can be used in Icon = "..." below.
 --[[
-LunarUI:SetLucideIconProvider({
+LunarUI:RegisterLucideIcons({
     home = "rbxassetid://YOUR_HOME_LUCIDE_ASSET_ID",
     settings = "rbxassetid://YOUR_SETTINGS_LUCIDE_ASSET_ID",
 })
