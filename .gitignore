@@ -3,3 +3,6 @@
 *.rbxm
 *.rbxmx
 build/
+license-server/licenses.json
+license-server/licenses.json.tmp
+license-server/node_modules/
