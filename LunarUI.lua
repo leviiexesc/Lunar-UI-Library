@@ -132,7 +132,11 @@ end
 function Lunar:CreateWindow(data)
     data=data or {};local themeName=Themes[data.Theme] and data.Theme or "LiquidGlass";local theme=Themes[themeName]
     local player=Players.LocalPlayer
-    local gui=new("ScreenGui",{Name="LunarUI",ResetOnSpawn=false,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},player:WaitForChild("PlayerGui"))
+    local playerGui=player:WaitForChild("PlayerGui")
+    local previous=playerGui:FindFirstChild("LunarUI")
+    if previous then previous:Destroy() end
+    UserInputService.MouseIconEnabled=true
+    local gui=new("ScreenGui",{Name="LunarUI",ResetOnSpawn=false,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},playerGui)
     local root=new("Frame",{Name="Window",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=data.Size or UDim2.fromOffset(data.Width or 780,data.Height or 520),BackgroundColor3=theme.Background,BackgroundTransparency=.12,BorderSizePixel=0},gui)
     corner(root,12);stroke(root,theme.Border,.22)
     new("UIGradient",{Rotation=35,Color=ColorSequence.new(theme.Accent,theme.Background),Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.88),NumberSequenceKeypoint.new(1,.98)})},root)
