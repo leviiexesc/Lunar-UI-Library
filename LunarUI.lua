@@ -11,7 +11,7 @@ local Lunar = { Version = "2.0.0", Options = {}, Icons = {}, Animations = true }
 local Themes = {
     LiquidGlass = {
         Background = Color3.fromRGB(12, 12, 15), Surface = Color3.fromRGB(30, 30, 35),
-        SurfaceTransparency = .20, Border = Color3.fromRGB(195, 195, 207),
+        SurfaceTransparency = .07, Border = Color3.fromRGB(195, 195, 207),
         Text = Color3.fromRGB(249, 249, 251), Muted = Color3.fromRGB(181, 181, 191),
         Accent = Color3.fromRGB(223, 210, 243), AccentText = Color3.fromRGB(30, 27, 35),
         Active = Color3.fromRGB(63, 59, 71),
@@ -92,13 +92,8 @@ Lunar.RegisterIcon = Lunar.RegisterLucideIcon
 
 local function icon(parent, name, theme, position, size, zIndex)
     local id = Lunar.Icons[string.lower(name or "")]
-    if id then return new("ImageLabel", { BackgroundTransparency=1, Image=id, ImageColor3=theme.Muted, Position=position, Size=size, ZIndex=zIndex or 2 }, parent) end
-    -- Native fallback, deliberately simple and readable when a decal has not been registered.
-    local box = new("Frame", { BackgroundColor3=theme.Muted, BackgroundTransparency=.18, BorderSizePixel=0, Position=position, Size=size, ZIndex=zIndex or 2 }, parent)
-    corner(box, 4)
-    local dot = new("Frame", { BackgroundColor3=theme.Text, BackgroundTransparency=.1, BorderSizePixel=0, AnchorPoint=Vector2.new(.5,.5), Position=UDim2.fromScale(.5,.5), Size=UDim2.fromScale(.34,.34), ZIndex=(zIndex or 2)+1 }, box)
-    corner(dot, 8)
-    return box
+    if not id then return nil end
+    return new("ImageLabel", { BackgroundTransparency=1, Image=id, ImageColor3=theme.Muted, Position=position, Size=size, ZIndex=zIndex or 2 }, parent)
 end
 
 local function option(flag, initial, setter)
@@ -137,31 +132,30 @@ function Lunar:CreateWindow(data)
     if previous then previous:Destroy() end
     UserInputService.MouseIconEnabled=true
     local gui=new("ScreenGui",{Name="LunarUI",ResetOnSpawn=false,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},playerGui)
-    local root=new("Frame",{Name="Window",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=data.Size or UDim2.fromOffset(data.Width or 780,data.Height or 520),BackgroundColor3=theme.Background,BackgroundTransparency=.12,BorderSizePixel=0},gui)
+    local root=new("Frame",{Name="Window",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=data.Size or UDim2.fromOffset(data.Width or 800,data.Height or 505),BackgroundColor3=theme.Background,BackgroundTransparency=.04,BorderSizePixel=0},gui)
     corner(root,12);stroke(root,theme.Border,.22)
     new("UIGradient",{Rotation=35,Color=ColorSequence.new(theme.Accent,theme.Background),Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.88),NumberSequenceKeypoint.new(1,.98)})},root)
-    local bar=new("Frame",{BackgroundColor3=theme.Surface,BackgroundTransparency=theme.SurfaceTransparency,BorderSizePixel=0,Size=UDim2.new(1,0,0,56)},root);corner(bar,12)
-    new("Frame",{BackgroundColor3=theme.Surface,BackgroundTransparency=theme.SurfaceTransparency,BorderSizePixel=0,Position=UDim2.new(0,0,1,-12),Size=UDim2.new(1,0,0,12)},bar)
-    text(bar,data.Title or "Lunar UI",16,theme.Text,{Position=UDim2.fromOffset(20,10),Size=UDim2.new(1,-145,0,20),Font=Enum.Font.GothamBold})
-    text(bar,data.Subtitle or "Roblox UI Library",9,theme.Muted,{Position=UDim2.fromOffset(20,30),Size=UDim2.new(1,-145,0,14)})
-    local windowControls=new("Frame",{BackgroundTransparency=1,Position=UDim2.new(1,-100,0,0),Size=UDim2.fromOffset(84,56)},bar)
+    local bar=new("Frame",{BackgroundColor3=theme.Surface,BackgroundTransparency=.16,BorderSizePixel=0,Size=UDim2.new(1,0,0,43)},root);corner(bar,12)
+    new("Frame",{BackgroundColor3=theme.Surface,BackgroundTransparency=.16,BorderSizePixel=0,Position=UDim2.new(0,0,1,-10),Size=UDim2.new(1,0,0,10)},bar)
+    text(bar,data.Title or "Lunar UI",16,theme.Text,{Position=UDim2.fromOffset(0,10),Size=UDim2.new(1,0,0,20),Font=Enum.Font.GothamBold,TextXAlignment=Enum.TextXAlignment.Center})
+    local windowControls=new("Frame",{BackgroundTransparency=1,Position=UDim2.new(1,-82,0,0),Size=UDim2.fromOffset(68,43)},bar)
     new("UIListLayout",{FillDirection=Enum.FillDirection.Horizontal,HorizontalAlignment=Enum.HorizontalAlignment.Right,VerticalAlignment=Enum.VerticalAlignment.Center,Padding=UDim.new(0,7)},windowControls)
     local function systemButton(caption)return new("TextButton",{Text=caption,Font=Enum.Font.GothamMedium,TextSize=14,TextColor3=theme.Muted,BackgroundTransparency=1,BorderSizePixel=0,AutoButtonColor=false,Size=UDim2.fromOffset(20,24)},windowControls)end
     local minimize,maximize,close=systemButton("-"),systemButton("o"),systemButton("x")
-    local body=new("Frame",{BackgroundTransparency=1,Position=UDim2.fromOffset(0,56),Size=UDim2.new(1,0,1,-56),ClipsDescendants=true},root)
-    local sidebar=new("Frame",{BackgroundColor3=theme.Surface,BackgroundTransparency=theme.SurfaceTransparency,BorderSizePixel=0,Size=UDim2.new(0,175,1,0)},body)
+    local body=new("Frame",{BackgroundTransparency=1,Position=UDim2.fromOffset(0,43),Size=UDim2.new(1,0,1,-43),ClipsDescendants=true},root)
+    local sidebar=new("Frame",{BackgroundColor3=theme.Surface,BackgroundTransparency=.11,BorderSizePixel=0,Size=UDim2.new(0,148,1,0)},body)
     stroke(sidebar,theme.Border,.72);pad(sidebar,10);new("UIListLayout",{Padding=UDim.new(0,6),SortOrder=Enum.SortOrder.LayoutOrder},sidebar)
-    local search=new("TextBox",{Text="",PlaceholderText="Search...",ClearTextOnFocus=false,Font=Enum.Font.Gotham,TextSize=10,TextColor3=theme.Text,PlaceholderColor3=theme.Muted,BackgroundColor3=theme.Surface,BackgroundTransparency=.2,BorderSizePixel=0,Size=UDim2.new(1,0,0,34),LayoutOrder=-20},sidebar);corner(search,7);stroke(search,theme.Border,.46);pad(search,9)
-    text(search,"/",11,theme.Muted,{Position=UDim2.new(1,-23,0,0),Size=UDim2.fromOffset(18,34),TextXAlignment=Enum.TextXAlignment.Center})
-    local content=new("ScrollingFrame",{BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.new(0,175,0,0),Size=UDim2.new(1,-175,1,0),ScrollBarThickness=3,ScrollBarImageColor3=theme.Muted,CanvasSize=UDim2.new()},body)
-    pad(content,18);local list=new("UIListLayout",{Padding=UDim.new(0,14),SortOrder=Enum.SortOrder.LayoutOrder},content)
+    local search=new("TextBox",{Text="",PlaceholderText="Search...",ClearTextOnFocus=false,Font=Enum.Font.Gotham,TextSize=10,TextColor3=theme.Text,PlaceholderColor3=theme.Muted,BackgroundColor3=theme.Surface,BackgroundTransparency=.12,BorderSizePixel=0,Size=UDim2.new(1,0,0,32),LayoutOrder=-20},sidebar);corner(search,6);stroke(search,theme.Border,.46);pad(search,8)
+    text(search,"o",12,theme.Muted,{Position=UDim2.new(1,-22,0,0),Size=UDim2.fromOffset(17,32),TextXAlignment=Enum.TextXAlignment.Center})
+    local content=new("ScrollingFrame",{BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.new(0,148,0,0),Size=UDim2.new(1,-148,1,0),ScrollBarThickness=3,ScrollBarImageColor3=theme.Muted,CanvasSize=UDim2.new()},body)
+    pad(content,15);local list=new("UIListLayout",{Padding=UDim.new(0,14),SortOrder=Enum.SortOrder.LayoutOrder},content)
     list:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()content.CanvasSize=UDim2.fromOffset(0,list.AbsoluteContentSize.Y+36)end)
     local launcher=new("TextButton",{Name="CompactLauncher",Text="",AutoButtonColor=false,BackgroundColor3=theme.Surface,BackgroundTransparency=.1,BorderSizePixel=0,Position=UDim2.new(0,18,1,-44),AnchorPoint=Vector2.new(0,1),Size=UDim2.fromOffset(27,27),ZIndex=100},gui);corner(launcher,20);stroke(launcher,theme.Border,.35);icon(launcher,data.LauncherIcon or "home",theme,UDim2.fromOffset(7,7),UDim2.fromOffset(13,13),101)
     text(gui,"Small icon open close UI",8,theme.Muted,{Position=UDim2.new(0,54,1,-50),Size=UDim2.fromOffset(170,17),ZIndex=100})
     local window=setmetatable({Gui=gui,Root=root,Body=body,Sidebar=sidebar,Content=content,Theme=theme,ThemeName=themeName,Launcher=launcher,Tabs={},Values={},Search=search}, {__index=Lunar})
     draggable(bar,root)
-    minimize.MouseButton1Click:Connect(function()body.Visible=not body.Visible;root.Size=UDim2.new(root.Size.X.Scale,root.Size.X.Offset,0,body.Visible and (data.Height or 520) or 56)end)
-    maximize.MouseButton1Click:Connect(function()local state=root:GetAttribute("max")root:SetAttribute("max",not state);root.Size=state and (data.Size or UDim2.fromOffset(data.Width or 780,data.Height or 520)) or UDim2.new(.92,0,.88,0);root.Position=UDim2.fromScale(.5,.5)end)
+    minimize.MouseButton1Click:Connect(function()body.Visible=not body.Visible;root.Size=UDim2.new(root.Size.X.Scale,root.Size.X.Offset,0,body.Visible and (data.Height or 505) or 43)end)
+    maximize.MouseButton1Click:Connect(function()local state=root:GetAttribute("max")root:SetAttribute("max",not state);root.Size=state and (data.Size or UDim2.fromOffset(data.Width or 800,data.Height or 505)) or UDim2.new(.92,0,.88,0);root.Position=UDim2.fromScale(.5,.5)end)
     close.MouseButton1Click:Connect(function()root.Visible=false end);launcher.MouseButton1Click:Connect(function()root.Visible=not root.Visible end)
     return window
 end

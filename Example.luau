@@ -6,14 +6,12 @@ local Lunar = loadstring(game:HttpGet("https://raw.githubusercontent.com/leviiex
 
 local Window = Lunar:CreateWindow({
     Title = "Lunar UI",
-    Subtitle = "Roblox UI Library",
     Theme = "LiquidGlass",
     LauncherIcon = "home",
 })
 
-local Main = Window:AddTab({ Title = "Main", Icon = "home" })
-local Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
-Window:AddTab({ Title = "More", Icon = "circle" })
+local Main = Window:AddTab({ Title = "Main" })
+local Settings = Window:AddTab({ Title = "Settings" })
 
 local Section = Main:AddSection({ Title = "Section" })
 
