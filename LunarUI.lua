@@ -1,882 +1,272 @@
---[[
-    Lunar UI — Simple. Powerful. Beautiful.
-    Standalone Roblox/Luau interface library.
-
-    Example:
-        local LunarUI = require(path.to.LunarUI)
-        local Window = LunarUI:CreateWindow({ Title = "Lunar UI", Subtitle = "Roblox UI Library" })
-]]
+-- Lunar UI 2.0 | Original Roblox Liquid Glass UI library
+-- Place this ModuleScript in ReplicatedStorage and require it from a LocalScript.
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 
-local LunarUI = { Version = "1.0.0", AnimationsEnabled = false, ButtonPopEnabled = true, AnimationStyle = "Fluid" }
-LunarUI.__index = LunarUI
-LunarUI.Icons = {}
-LunarUI.IconProvider = nil
-LunarUI.Lucide = {}
+local Lunar = { Version = "2.0.0", Options = {}, Icons = {}, Animations = true }
 
 local Themes = {
-    Dark = {
-        Background = Color3.fromRGB(8, 9, 13), Surface = Color3.fromRGB(17, 17, 22),
-        SurfaceHover = Color3.fromRGB(26, 27, 36), Border = Color3.fromRGB(125, 130, 140),
-        Text = Color3.fromRGB(245, 245, 248), Muted = Color3.fromRGB(168, 171, 181),
-        Accent = Color3.fromRGB(201, 200, 255), AccentSoft = Color3.fromRGB(72, 67, 105), AccentText = Color3.fromRGB(12, 12, 16),
-    },
     LiquidGlass = {
-        Background = Color3.fromRGB(9, 10, 16), Surface = Color3.fromRGB(21, 23, 31),
-        SurfaceHover = Color3.fromRGB(34, 36, 46), Border = Color3.fromRGB(172, 176, 186),
-        Text = Color3.fromRGB(247, 247, 250), Muted = Color3.fromRGB(170, 172, 182),
-        Accent = Color3.fromRGB(196, 192, 255), AccentSoft = Color3.fromRGB(109, 101, 150), AccentText = Color3.fromRGB(16, 15, 22),
+        Background = Color3.fromRGB(12, 12, 15), Surface = Color3.fromRGB(30, 30, 35),
+        SurfaceTransparency = .20, Border = Color3.fromRGB(195, 195, 207),
+        Text = Color3.fromRGB(249, 249, 251), Muted = Color3.fromRGB(181, 181, 191),
+        Accent = Color3.fromRGB(223, 210, 243), AccentText = Color3.fromRGB(30, 27, 35),
+        Active = Color3.fromRGB(63, 59, 71),
+    },
+    Dark = {
+        Background = Color3.fromRGB(9, 9, 11), Surface = Color3.fromRGB(24, 24, 28),
+        SurfaceTransparency = .08, Border = Color3.fromRGB(119, 119, 129),
+        Text = Color3.fromRGB(248,248,250), Muted = Color3.fromRGB(170,170,180),
+        Accent = Color3.fromRGB(235,235,240), AccentText = Color3.fromRGB(15,15,18),
+        Active = Color3.fromRGB(61,61,69),
     },
     Light = {
-        Background = Color3.fromRGB(238, 239, 247), Surface = Color3.fromRGB(255, 255, 255),
-        SurfaceHover = Color3.fromRGB(241, 242, 249), Border = Color3.fromRGB(211, 214, 229),
-        Text = Color3.fromRGB(30, 33, 48), Muted = Color3.fromRGB(102, 109, 132),
-        Accent = Color3.fromRGB(28, 28, 32), AccentSoft = Color3.fromRGB(221, 221, 226), AccentText = Color3.fromRGB(255, 255, 255),
+        Background = Color3.fromRGB(231,231,234), Surface = Color3.fromRGB(255,255,255),
+        SurfaceTransparency = .12, Border = Color3.fromRGB(154,154,164),
+        Text = Color3.fromRGB(31,31,36), Muted = Color3.fromRGB(101,101,112),
+        Accent = Color3.fromRGB(55,49,63), AccentText = Color3.fromRGB(255,255,255),
+        Active = Color3.fromRGB(218,214,224),
     },
     Halloween = {
-        Background = Color3.fromRGB(10, 10, 12), Surface = Color3.fromRGB(22, 22, 25),
-        SurfaceHover = Color3.fromRGB(42, 42, 47), Border = Color3.fromRGB(80, 80, 88),
-        Text = Color3.fromRGB(250, 247, 243), Muted = Color3.fromRGB(187, 182, 176),
-        Accent = Color3.fromRGB(242, 239, 233), AccentSoft = Color3.fromRGB(67, 65, 62), AccentText = Color3.fromRGB(10, 10, 12),
+        Background = Color3.fromRGB(16,11,18), Surface = Color3.fromRGB(38,27,42),
+        SurfaceTransparency = .17, Border = Color3.fromRGB(190,164,186),
+        Text = Color3.fromRGB(255,248,244), Muted = Color3.fromRGB(203,182,193),
+        Accent = Color3.fromRGB(242,222,205), AccentText = Color3.fromRGB(43,28,40),
+        Active = Color3.fromRGB(77,55,74),
     },
     Christmas = {
-        Background = Color3.fromRGB(7, 9, 8), Surface = Color3.fromRGB(18, 21, 19),
-        SurfaceHover = Color3.fromRGB(35, 40, 37), Border = Color3.fromRGB(70, 78, 73),
-        Text = Color3.fromRGB(247, 251, 248), Muted = Color3.fromRGB(177, 188, 181),
-        Accent = Color3.fromRGB(244, 248, 245), AccentSoft = Color3.fromRGB(58, 67, 61), AccentText = Color3.fromRGB(8, 10, 9),
+        Background = Color3.fromRGB(9,15,12), Surface = Color3.fromRGB(24,38,30),
+        SurfaceTransparency = .17, Border = Color3.fromRGB(177,201,185),
+        Text = Color3.fromRGB(247,253,249), Muted = Color3.fromRGB(178,200,185),
+        Accent = Color3.fromRGB(238,246,240), AccentText = Color3.fromRGB(19,32,24),
+        Active = Color3.fromRGB(52,75,59),
     },
     Summer = {
-        Background = Color3.fromRGB(231, 231, 233), Surface = Color3.fromRGB(252, 252, 253),
-        SurfaceHover = Color3.fromRGB(222, 222, 226), Border = Color3.fromRGB(176, 176, 184),
-        Text = Color3.fromRGB(31, 31, 35), Muted = Color3.fromRGB(103, 103, 112),
-        Accent = Color3.fromRGB(36, 36, 40), AccentSoft = Color3.fromRGB(207, 207, 213), AccentText = Color3.fromRGB(255, 255, 255),
+        Background = Color3.fromRGB(235,235,238), Surface = Color3.fromRGB(255,255,255),
+        SurfaceTransparency = .12, Border = Color3.fromRGB(164,164,174),
+        Text = Color3.fromRGB(31,31,36), Muted = Color3.fromRGB(104,104,114),
+        Accent = Color3.fromRGB(48,44,55), AccentText = Color3.fromRGB(255,255,255),
+        Active = Color3.fromRGB(220,217,225),
     },
 }
 
-local function make(class, props, parent)
-    local item = Instance.new(class)
-    for key, value in pairs(props or {}) do item[key] = value end
-    item.Parent = parent
-    return item
+local function new(className, properties, parent)
+    local object = Instance.new(className)
+    for key, value in pairs(properties or {}) do object[key] = value end
+    object.Parent = parent
+    return object
+end
+local function corner(parent, radius) return new("UICorner", { CornerRadius = UDim.new(0, radius or 7) }, parent) end
+local function stroke(parent, color, transparency) return new("UIStroke", { Color = color, Transparency = transparency or 0, Thickness = 1 }, parent) end
+local function pad(parent, value)
+    return new("UIPadding", { PaddingTop=UDim.new(0,value), PaddingBottom=UDim.new(0,value), PaddingLeft=UDim.new(0,value), PaddingRight=UDim.new(0,value) }, parent)
+end
+local function animate(object, properties, duration)
+    if not Lunar.Animations then for key,value in pairs(properties) do object[key]=value end return end
+    TweenService:Create(object, TweenInfo.new(duration or .16, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), properties):Play()
+end
+local function text(parent, value, size, color, properties)
+    properties = properties or {}
+    properties.BackgroundTransparency = 1; properties.Text = value or ""; properties.TextSize = size or 11
+    properties.TextColor3 = color; properties.Font = properties.Font or Enum.Font.Gotham
+    properties.TextXAlignment = properties.TextXAlignment or Enum.TextXAlignment.Left
+    properties.Size = properties.Size or UDim2.fromScale(1,1)
+    return new("TextLabel", properties, parent)
+end
+local function scalePop(button)
+    local scale = button:FindFirstChild("PressScale") or new("UIScale", { Name="PressScale", Scale=1 }, button)
+    TweenService:Create(scale, TweenInfo.new(.08,Enum.EasingStyle.Quad,Enum.EasingDirection.Out), {Scale=.96}):Play()
+    task.delay(.08,function() if scale.Parent then TweenService:Create(scale,TweenInfo.new(.14,Enum.EasingStyle.Back,Enum.EasingDirection.Out),{Scale=1}):Play() end end)
 end
 
-local function corner(parent, radius)
-    return make("UICorner", { CornerRadius = UDim.new(0, radius or 8) }, parent)
+function Lunar:RegisterLucideIcon(name, decalId)
+    local id = tostring(decalId)
+    self.Icons[string.lower(name)] = id:find("rbxassetid://") and id or "rbxassetid://" .. id
+    return self
+end
+function Lunar:RegisterLucideIcons(icons) for name,id in pairs(icons or {}) do self:RegisterLucideIcon(name,id) end return self end
+Lunar.RegisterIcon = Lunar.RegisterLucideIcon
+
+local function icon(parent, name, theme, position, size, zIndex)
+    local id = Lunar.Icons[string.lower(name or "")]
+    if id then return new("ImageLabel", { BackgroundTransparency=1, Image=id, ImageColor3=theme.Muted, Position=position, Size=size, ZIndex=zIndex or 2 }, parent) end
+    -- Native fallback, deliberately simple and readable when a decal has not been registered.
+    local box = new("Frame", { BackgroundColor3=theme.Muted, BackgroundTransparency=.18, BorderSizePixel=0, Position=position, Size=size, ZIndex=zIndex or 2 }, parent)
+    corner(box, 4)
+    local dot = new("Frame", { BackgroundColor3=theme.Text, BackgroundTransparency=.1, BorderSizePixel=0, AnchorPoint=Vector2.new(.5,.5), Position=UDim2.fromScale(.5,.5), Size=UDim2.fromScale(.34,.34), ZIndex=(zIndex or 2)+1 }, box)
+    corner(dot, 8)
+    return box
 end
 
-local function stroke(parent, color, transparency)
-    return make("UIStroke", { Color = color, Transparency = transparency or 0, Thickness = 1 }, parent)
-end
-
-local function glow(parent, color, transparency)
-    local effect = parent:FindFirstChild("LunarGlow")
-    if not effect then
-        effect = make("UIStroke", { Name = "LunarGlow", Thickness = 2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }, parent)
+local function option(flag, initial, setter)
+    local control = { Value=initial, Changed={} }
+    function control:SetValue(value) setter(value) end
+    function control:OnChanged(callback) table.insert(self.Changed,callback); return callback end
+    function control:_set(value)
+        self.Value=value
+        for _,callback in ipairs(self.Changed) do task.spawn(callback,value) end
     end
-    effect.Color, effect.Transparency = color, transparency or .45
-    return effect
+    Lunar.Options[flag]=control
+    return control
 end
-
-local function padding(parent, amount)
-    return make("UIPadding", {
-        PaddingTop = UDim.new(0, amount), PaddingBottom = UDim.new(0, amount),
-        PaddingLeft = UDim.new(0, amount), PaddingRight = UDim.new(0, amount),
-    }, parent)
+local function normalize(flag, data)
+    if type(flag)=="table" then data=flag;flag=data.Flag or data.Title end
+    data=data or {};flag=flag or data.Flag or data.Title or ("Option_"..tostring(os.clock()));return flag,data
 end
-
-local function tween(object, properties, duration)
-    if not LunarUI.AnimationsEnabled then
-        for property, value in pairs(properties) do object[property] = value end
-        return
-    end
-    local geometric = properties.Position ~= nil or properties.Size ~= nil or properties.Rotation ~= nil or properties.Scale ~= nil
-    local easing = Enum.EasingStyle.Quint
-    if LunarUI.AnimationStyle == "Fluid" and geometric then
-        easing = Enum.EasingStyle.Back
-    elseif LunarUI.AnimationStyle == "Soft" then
-        easing = Enum.EasingStyle.Sine
-    end
-    local speed = LunarUI.AnimationStyle == "Fast" and .65 or 1
-    TweenService:Create(object, TweenInfo.new((duration or .18) * speed, easing, Enum.EasingDirection.Out), properties):Play()
-end
-
-local function getScale(object)
-    local scale = object:FindFirstChild("LunarMotionScale")
-    if not scale then scale = make("UIScale", { Name = "LunarMotionScale", Scale = 1 }, object) end
-    return scale
-end
-
-local function pop(object, peak, duration)
-    if not LunarUI.ButtonPopEnabled or not object or not object.Parent then return end
-    local scale = getScale(object)
-    TweenService:Create(scale, TweenInfo.new((duration or .1) * .45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = peak or 1.045 }):Play()
-    task.delay((duration or .1) * .45, function()
-        if scale.Parent then TweenService:Create(scale, TweenInfo.new(duration or .16, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = 1 }):Play() end
-    end)
-end
-
-local function appear(object, delay)
-    local scale = getScale(object)
-    scale.Scale = LunarUI.AnimationsEnabled and .96 or 1
-    task.delay(delay or 0, function()
-        if scale.Parent then tween(scale, { Scale = 1 }, .24) end
-    end)
-end
-
-local function text(parent, value, size, color, props)
-    props = props or {}
-    props.BackgroundTransparency = 1
-    props.Text = value or ""
-    props.TextSize = size or 12
-    props.TextColor3 = color
-    props.Font = props.Font or Enum.Font.Gotham
-    props.TextXAlignment = props.TextXAlignment or Enum.TextXAlignment.Left
-    props.Size = props.Size or UDim2.fromScale(1, 1)
-    return make("TextLabel", props, parent)
-end
-
-local function button(parent, label, theme, props)
-    props = props or {}
-    local usePop = props.Pop == true
-    local radius = props.Radius or 7
-    props.Pop = nil -- Internal Lunar UI option; not a Roblox TextButton property.
-    props.Radius = nil -- Internal Lunar UI option; not a Roblox TextButton property.
-    props.Text = label
-    props.Font = Enum.Font.GothamMedium
-    props.TextSize = props.TextSize or 12
-    props.TextColor3 = props.TextColor3 or theme.Text
-    props.BackgroundColor3 = props.BackgroundColor3 or theme.SurfaceHover
-    props.AutoButtonColor = false
-    local item = make("TextButton", props, parent)
-    corner(item, radius)
-    local restingColor, restingTransparency = item.BackgroundColor3, item.BackgroundTransparency
-    item.MouseEnter:Connect(function()
-        if restingTransparency < 1 then tween(item, { BackgroundColor3 = restingColor:Lerp(theme.Accent, .15) }, .14) end
-    end)
-    item.MouseLeave:Connect(function()
-        if restingTransparency < 1 then tween(item, { BackgroundColor3 = restingColor }, .18) end
-    end)
-    item.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            if usePop and LunarUI.ButtonPopEnabled then TweenService:Create(getScale(item), TweenInfo.new(.08, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = .95 }):Play() end
-        end
-    end)
-    item.Activated:Connect(function()
-        local scale = getScale(item)
-        if usePop and LunarUI.ButtonPopEnabled then
-            TweenService:Create(scale, TweenInfo.new(.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1.055 }):Play()
-            task.delay(.1, function() if scale.Parent then TweenService:Create(scale, TweenInfo.new(.16, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), { Scale = 1 }):Play() end end)
-        end
-    end)
-    return item
-end
-
-local function bindDrag(handle, target)
-    local dragging, activeInput, dragStart, startPosition
+local function draggable(handle, target)
+    local dragging,start,origin
     handle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging, activeInput, dragStart, startPosition = true, input, input.Position, target.Position
-        end
+        if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then dragging=true;start=input.Position;origin=target.Position end
     end)
     UserInputService.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input == activeInput) then
-            local delta = input.Position - dragStart
-            target.Position = UDim2.new(startPosition.X.Scale, startPosition.X.Offset + delta.X, startPosition.Y.Scale, startPosition.Y.Offset + delta.Y)
+        if dragging and (input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch) then
+            local delta=input.Position-start;target.Position=UDim2.new(origin.X.Scale,origin.X.Offset+delta.X,origin.Y.Scale,origin.Y.Offset+delta.Y)
         end
     end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input == activeInput or (activeInput and activeInput.UserInputType == Enum.UserInputType.MouseButton1 and input.UserInputType == Enum.UserInputType.MouseButton1) then
-            dragging, activeInput = false, nil
-        end
-    end)
+    UserInputService.InputEnded:Connect(function(input) if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then dragging=false end end)
 end
 
-local function bindLauncherDrag(launcher)
-    local dragging, moved, inputStart, startPosition
-    launcher.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging, moved, inputStart, startPosition = true, false, input.Position, launcher.Position
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - inputStart
-            if delta.Magnitude > 4 then moved = true end
-            launcher.Position = UDim2.new(startPosition.X.Scale, startPosition.X.Offset + delta.X, startPosition.Y.Scale, startPosition.Y.Offset + delta.Y)
-        end
-    end)
-    UserInputService.InputEnded:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-            dragging = false
-            launcher:SetAttribute("Dragged", moved)
-            task.delay(.08, function() if launcher.Parent then launcher:SetAttribute("Dragged", false) end end)
-        end
-    end)
-end
-
--- Lucide-style icon registry. Register Roblox asset IDs under Lucide icon names.
--- Example: LunarUI:RegisterIcon("settings", "rbxassetid://123456789")
-function LunarUI:RegisterIcon(name, assetId)
-    assert(type(name) == "string", "Icon name must be a string.")
-    assert(type(assetId) == "string" or type(assetId) == "number", "Icon asset ID must be a string or number.")
-    self.Icons[string.lower(name)] = tostring(assetId):find("rbxassetid://") and tostring(assetId) or "rbxassetid://" .. tostring(assetId)
-    return self
-end
-
-function LunarUI:SetIconProvider(provider)
-    assert(type(provider) == "function" or provider == nil, "Icon provider must be a function or nil.")
-    self.IconProvider = provider
-    return self
-end
-
--- Lucide-compatible name provider.
--- Map names from https://lucide.dev/icons/ to Roblox-uploaded image asset IDs.
--- Example: LunarUI:SetLucideIconProvider({ home = 123, settings = 456 })
-function LunarUI:SetLucideIconProvider(icons)
-    assert(type(icons) == "table" or type(icons) == "function" or icons == nil, "Lucide provider must be a table, function, or nil.")
-    self.Lucide = icons or {}
-    return self
-end
-
--- Easy Lucide decal API. Upload your Lucide PNG/SVG as a Roblox decal, then:
--- LunarUI:RegisterLucideIcon("home", "rbxassetid://123456789")
-function LunarUI:RegisterLucideIcon(name, decalId)
-    return self:RegisterIcon(name, decalId)
-end
-
-function LunarUI:RegisterLucideIcons(iconMap)
-    assert(type(iconMap) == "table", "Lucide icon map must be a table.")
-    for name, decalId in pairs(iconMap) do self:RegisterLucideIcon(name, decalId) end
-    return self
-end
-
-function LunarUI:CreateLucideIcon(parent, name, options)
-    if self:GetIcon(name) then return self:CreateIcon(parent, name, options) end
-    options = options or {}
-    return self:CreateIconFallback(parent, name, options.Color or Color3.new(1,1,1), options.Position or UDim2.new(), options.Size or UDim2.fromOffset(16,16), options.ZIndex or 1)
-end
-
-function LunarUI:GetIcon(name)
-    if not name then return nil end
-    if type(name) == "number" or tostring(name):find("rbxassetid://") then return tostring(name):find("rbxassetid://") and tostring(name) or "rbxassetid://" .. tostring(name) end
-    local key = string.lower(tostring(name))
-    local lucide = type(self.Lucide) == "function" and self.Lucide(key) or self.Lucide[key]
-    local asset = self.Icons[key] or lucide or (self.IconProvider and self.IconProvider(key))
-    if asset and not tostring(asset):find("rbxassetid://") then return "rbxassetid://" .. tostring(asset) end
-    return asset
-end
-
-function LunarUI:CreateIcon(parent, name, options)
-    options = options or {}
-    local icon = Instance.new("ImageLabel")
-    icon.BackgroundTransparency = 1
-    icon.Image = self:GetIcon(name) or ""
-    icon.ImageColor3 = options.Color or Color3.new(1, 1, 1)
-    icon.ImageTransparency = options.Transparency or 0
-    icon.Size = options.Size or UDim2.fromOffset(16, 16)
-    icon.Position = options.Position or UDim2.new()
-    icon.ZIndex = options.ZIndex or 1
-    icon.Parent = parent
-    return icon
-end
-
-function LunarUI:CreateIconFallback(parent, name, color, position, size, zIndex)
-    local holder = make("Frame", {
-        Name = "LunarIcon_" .. tostring(name), BackgroundTransparency = 1,
-        BorderSizePixel = 0, Position = position, Size = size, ZIndex = zIndex or 2,
-    }, parent)
-    local layer = (zIndex or 2) + 1
-    local key = string.lower(tostring(name))
-    local function line(positionValue, frameSize, rotation)
-        return make("Frame", { BackgroundColor3 = color, BorderSizePixel = 0, Position = positionValue, Size = frameSize, Rotation = rotation or 0, ZIndex = layer }, holder)
-    end
-    if key == "home" then
-        line(UDim2.fromScale(.28,.52), UDim2.fromScale(.44,.36))
-        line(UDim2.fromScale(.18,.31), UDim2.fromScale(.45,.10), 42)
-        line(UDim2.fromScale(.38,.31), UDim2.fromScale(.45,.10), -42)
-    elseif key == "settings" then
-        local ring = line(UDim2.fromScale(.2,.2), UDim2.fromScale(.6,.6)); corner(ring, 100)
-        ring.BackgroundTransparency = .25
-        local core = line(UDim2.fromScale(.4,.4), UDim2.fromScale(.2,.2)); corner(core, 100)
-        for _, rotation in ipairs({0,45,90,135}) do line(UDim2.fromScale(.46,.08), UDim2.fromScale(.08,.84), rotation) end
-    elseif key == "search" then
-        local ring = line(UDim2.fromScale(.12,.12), UDim2.fromScale(.55,.55)); corner(ring, 100)
-        ring.BackgroundTransparency = .25
-        line(UDim2.fromScale(.58,.61), UDim2.fromScale(.37,.10), 45)
-    else
-        local outer = line(UDim2.fromScale(.16,.16), UDim2.fromScale(.68,.68)); corner(outer, 4)
-        local inner = line(UDim2.fromScale(.38,.38), UDim2.fromScale(.24,.24)); corner(inner, 2)
-    end
-    return holder
-end
-
-local function createCursor(gui, color, assetId)
-    local cursor = make("Frame", { Name = "LunarCursor", BackgroundTransparency = 1, Size = UDim2.fromOffset(24, 24), ZIndex = 500 }, gui)
-    if assetId then
-        make("ImageLabel", { BackgroundTransparency = 1, Image = tostring(assetId):find("rbxassetid://") and assetId or "rbxassetid://" .. assetId, ImageColor3 = color, Size = UDim2.fromScale(1, 1), ZIndex = 501 }, cursor)
-    else
-        local pointer = make("Frame", { BackgroundColor3 = color, BorderSizePixel = 0, Position = UDim2.fromOffset(3, 2), Size = UDim2.fromOffset(5, 17), Rotation = -38, ZIndex = 501 }, cursor)
-        corner(pointer, 3)
-        local ring = make("Frame", { BackgroundColor3 = color, BackgroundTransparency = .12, BorderSizePixel = 0, Position = UDim2.fromOffset(9, 12), Size = UDim2.fromOffset(10, 10), ZIndex = 501 }, cursor)
-        corner(ring, 10)
-    end
-    return cursor
-end
-
-local function createSeasonalEffects(gui, themeName, theme)
-    if not LunarUI.AnimationsEnabled or (themeName ~= "Halloween" and themeName ~= "Christmas") then return nil end
-    local layer = make("Frame", {
-        Name = "LunarSeasonalEffects", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1),
-        ZIndex = 0, ClipsDescendants = true,
-    }, gui)
-    local count = themeName == "Christmas" and 30 or 22
-    for index = 1, count do
-        local snow = themeName == "Christmas"
-        local particle = make("Frame", {
-            BackgroundColor3 = snow and Color3.fromRGB(250, 250, 252) or (index % 2 == 0 and theme.Accent or Color3.fromRGB(155, 155, 164)),
-            BackgroundTransparency = snow and .22 or .35, BorderSizePixel = 0,
-            Position = UDim2.fromScale(math.random(), -math.random(5, 100) / 100),
-            Size = snow and UDim2.fromOffset(math.random(2, 5), math.random(2, 5)) or UDim2.fromOffset(2, math.random(9, 18)),
-            ZIndex = 0,
-        }, layer)
-        if snow then corner(particle, 10) end
-        task.spawn(function()
-            while particle.Parent do
-                local startX = math.random(0, 100) / 100
-                particle.Position = UDim2.fromScale(startX, -.08)
-                local duration = snow and math.random(32, 54) / 10 or math.random(15, 28) / 10
-                if LunarUI.AnimationsEnabled then
-                    tween(particle, { Position = UDim2.fromScale(math.clamp(startX + (snow and math.random(-10, 10) / 100 or 0), 0, 1), 1.08) }, duration)
-                    task.wait(duration)
-                else
-                    particle.Position = UDim2.fromScale(startX, 1.08)
-                    task.wait(.35)
-                end
-            end
-        end)
-    end
-    return layer
-end
-
-function LunarUI:CreateWindow(options)
-    options = options or {}
-    local themeName = Themes[options.Theme] and options.Theme or "LiquidGlass"
-    local theme = Themes[themeName]
-    local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
-    local gui = make("ScreenGui", { Name = "LunarUI", ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling }, playerGui)
-    local backdrop = make("Frame", { BackgroundColor3 = Color3.fromRGB(8, 9, 13), BackgroundTransparency = .38, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), ZIndex = 0 }, gui)
-    local backdropPattern = make("Frame", { BackgroundColor3 = Color3.fromRGB(255, 255, 255), BackgroundTransparency = 1, BorderSizePixel = 0, Size = UDim2.fromScale(1, 1), ZIndex = 1 }, backdrop)
-    local pattern = make("UIGradient", {
-        Rotation = 90,
-        Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(8, 9, 13)),
-            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(19, 20, 28)),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(9, 11, 16)),
-        }),
-        Transparency = NumberSequence.new({
-            NumberSequenceKeypoint.new(0, 0.5),
-            NumberSequenceKeypoint.new(1, 0.7),
-        }),
-    }, backdropPattern)
-    local seasonalEffects = createSeasonalEffects(gui, themeName, theme)
-    local cursor
-    if options.CustomCursor ~= false and UserInputService.MouseEnabled then
-        cursor = createCursor(gui, theme.Accent, options.CursorIcon)
-        UserInputService.MouseIconEnabled = false
-        UserInputService.InputChanged:Connect(function(input)
-            if cursor and cursor.Parent and input.UserInputType == Enum.UserInputType.MouseMovement then
-                cursor.Position = UDim2.fromOffset(input.Position.X, input.Position.Y)
-            end
-        end)
-    end
-    local scale = make("UIScale", { Scale = 0.92 }, gui)
-    local root = make("Frame", {
-        Name = "Window", Size = UDim2.fromOffset(options.Width or 760, options.Height or 500),
-        Position = UDim2.fromScale(.5, .5), AnchorPoint = Vector2.new(.5, .5),
-        BackgroundColor3 = theme.Background, BackgroundTransparency = .2, BorderSizePixel = 0,
-        ZIndex = 2,
-    }, gui)
-    corner(root, 13); stroke(root, theme.Border, .18)
-    glow(root, theme.Accent, .72)
-    local rootGradient = make("UIGradient", {
-        Name = "LunarGlassGradient",
-        Rotation = 28,
-        Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, theme.Accent:Lerp(theme.Background, .7)),
-            ColorSequenceKeypoint.new(.35, theme.Background),
-            ColorSequenceKeypoint.new(1, theme.SurfaceHover),
-        }),
-        Transparency = NumberSequence.new({
-            NumberSequenceKeypoint.new(0, .35),
-            NumberSequenceKeypoint.new(.4, .08),
-            NumberSequenceKeypoint.new(1, .24),
-        }),
-    }, root)
-    local launcher = make("TextButton", {
-        Name = "LunarLauncher", Text = "", TextSize = 21, Font = Enum.Font.GothamBold,
-        TextColor3 = Color3.new(1, 1, 1), BackgroundColor3 = theme.Accent,
-        AutoButtonColor = false, Visible = options.Launcher ~= false, AnchorPoint = Vector2.new(1, 1),
-        Position = UDim2.new(1, -22, 1, -22), Size = UDim2.fromOffset(54, 54), ZIndex = 100,
-    }, gui)
-    corner(launcher, 27); stroke(launcher, Color3.new(1, 1, 1), .72)
-    local launcherIcon = LunarUI:GetIcon(options.LauncherIcon or "home")
-    if launcherIcon then
-        LunarUI:CreateLucideIcon(launcher, options.LauncherIcon or "home", {
-            Color = Color3.new(1, 1, 1), Size = UDim2.fromOffset(24, 24),
-            Position = UDim2.fromOffset(15, 15), ZIndex = 101,
-        })
-    else
-        LunarUI:CreateLucideIcon(launcher, options.LauncherIcon or "home", { Color = Color3.new(1,1,1), Position = UDim2.fromOffset(15,15), Size = UDim2.fromOffset(24,24), ZIndex = 101 })
-    end
-    local topbar = make("Frame", { BackgroundColor3 = theme.Surface, BackgroundTransparency = .12, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 56), ZIndex = 3 }, root)
-    corner(topbar, 13)
-    local titleLabel = text(topbar, options.Title or "Lunar UI", 16, theme.Text, { Position = UDim2.new(.5, 0, 0, 12), Size = UDim2.new(0, 130, 0, 22), Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 4 })
-    titleLabel.AnchorPoint = Vector2.new(.5, 0)
-    local controls = make("Frame", { BackgroundTransparency = 1, Size = UDim2.fromOffset(108, 56), Position = UDim2.new(1, -116, 0, 0), ZIndex = 4 }, topbar)
-    local layout = make("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, HorizontalAlignment = Enum.HorizontalAlignment.Right, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0, 6) }, controls)
-    local function control(icon)
-        return button(controls, icon, theme, { Size = UDim2.fromOffset(26, 26), BackgroundTransparency = .9, TextColor3 = theme.Muted, TextSize = 13 })
-    end
-    local minimize, maximize, close = control("—"), control("▢"), control("×")
-    local body = make("Frame", { BackgroundTransparency = 1, Position = UDim2.fromOffset(0, 56), Size = UDim2.new(1, 0, 1, -56), ClipsDescendants = true, ZIndex = 3 }, root)
-    local sidebar = make("Frame", { BackgroundColor3 = theme.Surface, BackgroundTransparency = .14, BorderSizePixel = 0, Size = UDim2.new(0, 190, 1, 0), ZIndex = 3 }, body)
-    local sideDivider = make("Frame", { BackgroundColor3 = theme.Border, BackgroundTransparency = .45, BorderSizePixel = 0, Position = UDim2.new(1, 0, 0, 0), Size = UDim2.new(0, 1, 1, 0), ZIndex = 4 }, sidebar)
-    local sideLayout = make("UIListLayout", { Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder }, sidebar); padding(sidebar, 10)
-    local search = make("TextBox", { BackgroundColor3 = theme.Background, BackgroundTransparency = .25, BorderSizePixel = 0, Text = "", PlaceholderText = "Search...", PlaceholderColor3 = theme.Muted, TextColor3 = theme.Text, TextSize = 12, Font = Enum.Font.Gotham, Size = UDim2.new(1, 0, 0, 34), ClearTextOnFocus = false, ZIndex = 4 }, sidebar)
-    corner(search, 7); stroke(search, theme.Border, .35)
-    local searchIcon = text(search, "⌕", 12, theme.Muted, { Position = UDim2.fromOffset(8, 0), Size = UDim2.fromOffset(16, 34), TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 5 })
-    searchIcon.TextTransparency = .4
-    search.PlaceholderColor3 = theme.Muted
-    search.TextXAlignment = Enum.TextXAlignment.Left
-    search.TextWrapped = false
-    search.PaddingLeft = 28
-    local profile = make("Frame", { Name = "PlayerProfile", BackgroundColor3 = theme.Background, BackgroundTransparency = .28, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 48), LayoutOrder = -10, ZIndex = 4 }, sidebar)
-    corner(profile, 8); stroke(profile, theme.Border, .35)
-    local avatar = make("ImageLabel", { Name = "Avatar", BackgroundColor3 = theme.AccentSoft, BorderSizePixel = 0, Position = UDim2.fromOffset(7, 7), Size = UDim2.fromOffset(34, 34), Image = "", ScaleType = Enum.ScaleType.Crop, ZIndex = 5 }, profile)
-    corner(avatar, 17)
-    local localPlayer = Players.LocalPlayer
-    local profileName = text(profile, localPlayer.DisplayName, 10, theme.Text, { Position = UDim2.fromOffset(49, 7), Size = UDim2.new(1, -56, 0, 16), Font = Enum.Font.GothamBold, ZIndex = 5 })
-    local profileUsername = text(profile, "@" .. localPlayer.Name, 8, theme.Muted, { Position = UDim2.fromOffset(49, 23), Size = UDim2.new(1, -56, 0, 15), ZIndex = 5 })
-    task.spawn(function()
-        local ok, image = pcall(function()
-            return Players:GetUserThumbnailAsync(localPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
-        end)
-        if ok and avatar.Parent then avatar.Image = image end
-    end)
-    local content = make("ScrollingFrame", { BackgroundTransparency = 1, BorderSizePixel = 0, Position = UDim2.new(0, 190, 0, 0), Size = UDim2.new(1, -190, 1, 0), ScrollBarThickness = 3, ScrollBarImageColor3 = theme.Accent, CanvasSize = UDim2.new(), ZIndex = 3 }, body)
-    padding(content, 18)
-    local contentLayout = make("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }, content)
-    contentLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() content.CanvasSize = UDim2.fromOffset(0, contentLayout.AbsoluteContentSize.Y + 36) end)
-    bindDrag(topbar, root)
-    local window = setmetatable({ Gui = gui, Root = root, Cursor = cursor, CursorIcon = options.CursorIcon, SeasonalEffects = seasonalEffects, Body = body, Launcher = launcher, Sidebar = sidebar, Content = content, Profile = profile, Avatar = avatar, ProfileName = profileName, ProfileUsername = profileUsername, Theme = theme, ThemeName = themeName, Tabs = {}, Values = {}, Flags = {}, _activeTab = nil }, LunarUI)
-    tween(scale, { Scale = 1 }, .35)
-    minimize.MouseButton1Click:Connect(function()
-        body.Visible = not body.Visible
-        tween(root, { Size = UDim2.fromOffset(root.Size.X.Offset, body.Visible and (options.Height or 500) or 56) }, .24)
-    end)
-    maximize.MouseButton1Click:Connect(function()
-        local maximized = root:GetAttribute("Maximized")
-        root:SetAttribute("Maximized", not maximized)
-        tween(root, { Size = maximized and UDim2.fromOffset(options.Width or 760, options.Height or 500) or UDim2.new(.92, 0, .88, 0), Position = UDim2.fromScale(.5, .5) }, .28)
-    end)
-    local function hideWindow()
-        tween(scale, { Scale = .92 }, .2)
-        task.delay(LunarUI.AnimationsEnabled and .2 or 0, function()
-            if not root.Parent then return end
-            root.Visible = false
-            tween(launcher, { BackgroundColor3 = window.Theme.Accent }, .15)
-        end)
-    end
-    close.MouseButton1Click:Connect(hideWindow)
-    launcher.MouseButton1Click:Connect(function()
-        if launcher:GetAttribute("Dragged") then return end
-        if root.Visible then
-            hideWindow()
-            return
-        end
-        root.Visible = true
-        scale.Scale = .92
-        tween(scale, { Scale = 1 }, .24)
-    end)
-    window.Close = hideWindow
+function Lunar:CreateWindow(data)
+    data=data or {};local themeName=Themes[data.Theme] and data.Theme or "LiquidGlass";local theme=Themes[themeName]
+    local player=Players.LocalPlayer
+    local gui=new("ScreenGui",{Name="LunarUI",ResetOnSpawn=false,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},player:WaitForChild("PlayerGui"))
+    local root=new("Frame",{Name="Window",AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=data.Size or UDim2.fromOffset(data.Width or 780,data.Height or 520),BackgroundColor3=theme.Background,BackgroundTransparency=.12,BorderSizePixel=0},gui)
+    corner(root,12);stroke(root,theme.Border,.22)
+    new("UIGradient",{Rotation=35,Color=ColorSequence.new(theme.Accent,theme.Background),Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,.88),NumberSequenceKeypoint.new(1,.98)})},root)
+    local bar=new("Frame",{BackgroundColor3=theme.Surface,BackgroundTransparency=theme.SurfaceTransparency,BorderSizePixel=0,Size=UDim2.new(1,0,0,56)},root);corner(bar,12)
+    new("Frame",{BackgroundColor3=theme.Surface,BackgroundTransparency=theme.SurfaceTransparency,BorderSizePixel=0,Position=UDim2.new(0,0,1,-12),Size=UDim2.new(1,0,0,12)},bar)
+    text(bar,data.Title or "Lunar UI",16,theme.Text,{Position=UDim2.fromOffset(20,10),Size=UDim2.new(1,-145,0,20),Font=Enum.Font.GothamBold})
+    text(bar,data.Subtitle or "Roblox UI Library",9,theme.Muted,{Position=UDim2.fromOffset(20,30),Size=UDim2.new(1,-145,0,14)})
+    local windowControls=new("Frame",{BackgroundTransparency=1,Position=UDim2.new(1,-100,0,0),Size=UDim2.fromOffset(84,56)},bar)
+    new("UIListLayout",{FillDirection=Enum.FillDirection.Horizontal,HorizontalAlignment=Enum.HorizontalAlignment.Right,VerticalAlignment=Enum.VerticalAlignment.Center,Padding=UDim.new(0,7)},windowControls)
+    local function systemButton(caption)return new("TextButton",{Text=caption,Font=Enum.Font.GothamMedium,TextSize=14,TextColor3=theme.Muted,BackgroundTransparency=1,BorderSizePixel=0,AutoButtonColor=false,Size=UDim2.fromOffset(20,24)},windowControls)end
+    local minimize,maximize,close=systemButton("-"),systemButton("o"),systemButton("x")
+    local body=new("Frame",{BackgroundTransparency=1,Position=UDim2.fromOffset(0,56),Size=UDim2.new(1,0,1,-56),ClipsDescendants=true},root)
+    local sidebar=new("Frame",{BackgroundColor3=theme.Surface,BackgroundTransparency=theme.SurfaceTransparency,BorderSizePixel=0,Size=UDim2.new(0,175,1,0)},body)
+    stroke(sidebar,theme.Border,.72);pad(sidebar,10);new("UIListLayout",{Padding=UDim.new(0,6),SortOrder=Enum.SortOrder.LayoutOrder},sidebar)
+    local search=new("TextBox",{Text="",PlaceholderText="Search...",ClearTextOnFocus=false,Font=Enum.Font.Gotham,TextSize=10,TextColor3=theme.Text,PlaceholderColor3=theme.Muted,BackgroundColor3=theme.Surface,BackgroundTransparency=.2,BorderSizePixel=0,Size=UDim2.new(1,0,0,34),LayoutOrder=-20},sidebar);corner(search,7);stroke(search,theme.Border,.46);pad(search,9)
+    text(search,"/",11,theme.Muted,{Position=UDim2.new(1,-23,0,0),Size=UDim2.fromOffset(18,34),TextXAlignment=Enum.TextXAlignment.Center})
+    local content=new("ScrollingFrame",{BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.new(0,175,0,0),Size=UDim2.new(1,-175,1,0),ScrollBarThickness=3,ScrollBarImageColor3=theme.Muted,CanvasSize=UDim2.new()},body)
+    pad(content,18);local list=new("UIListLayout",{Padding=UDim.new(0,14),SortOrder=Enum.SortOrder.LayoutOrder},content)
+    list:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()content.CanvasSize=UDim2.fromOffset(0,list.AbsoluteContentSize.Y+36)end)
+    local launcher=new("TextButton",{Name="CompactLauncher",Text="",AutoButtonColor=false,BackgroundColor3=theme.Surface,BackgroundTransparency=.1,BorderSizePixel=0,Position=UDim2.new(0,18,1,-44),AnchorPoint=Vector2.new(0,1),Size=UDim2.fromOffset(27,27),ZIndex=100},gui);corner(launcher,20);stroke(launcher,theme.Border,.35);icon(launcher,data.LauncherIcon or "home",theme,UDim2.fromOffset(7,7),UDim2.fromOffset(13,13),101)
+    text(gui,"Small icon open close UI",8,theme.Muted,{Position=UDim2.new(0,54,1,-50),Size=UDim2.fromOffset(170,17),ZIndex=100})
+    local window=setmetatable({Gui=gui,Root=root,Body=body,Sidebar=sidebar,Content=content,Theme=theme,ThemeName=themeName,Launcher=launcher,Tabs={},Values={},Search=search}, {__index=Lunar})
+    draggable(bar,root)
+    minimize.MouseButton1Click:Connect(function()body.Visible=not body.Visible;root.Size=UDim2.new(root.Size.X.Scale,root.Size.X.Offset,0,body.Visible and (data.Height or 520) or 56)end)
+    maximize.MouseButton1Click:Connect(function()local state=root:GetAttribute("max")root:SetAttribute("max",not state);root.Size=state and (data.Size or UDim2.fromOffset(data.Width or 780,data.Height or 520)) or UDim2.new(.92,0,.88,0);root.Position=UDim2.fromScale(.5,.5)end)
+    close.MouseButton1Click:Connect(function()root.Visible=false end);launcher.MouseButton1Click:Connect(function()root.Visible=not root.Visible end)
     return window
 end
 
-function LunarUI:AddTab(options)
-    options = options or {}
-    local tab = setmetatable({ Window = self, Sections = {} }, { __index = LunarUI })
-    local title = options.Title or "Tab"
-    local iconAsset = LunarUI:GetIcon(options.Icon)
-    local nav = button(self.Sidebar, title, self.Theme, { Size = UDim2.new(1, 0, 0, 36), BackgroundTransparency = .8, TextColor3 = self.Theme.Muted, LayoutOrder = #self.Tabs + 1, TextXAlignment = Enum.TextXAlignment.Left, BackgroundColor3 = self.Theme.SurfaceHover })
-    nav.Text = title
-    padding(nav, 10)
-    if iconAsset then
-        nav.TextXAlignment = Enum.TextXAlignment.Left
-        nav.Text = "  " .. title
-        LunarUI:CreateLucideIcon(nav, options.Icon, { Color = self.Theme.Muted, Size = UDim2.fromOffset(14, 14), Position = UDim2.fromOffset(12, 11), ZIndex = 2 })
-    elseif options.Icon then
-        nav.Text = "  " .. title
-        LunarUI:CreateLucideIcon(nav, options.Icon, { Color = self.Theme.Accent, Size = UDim2.fromOffset(13, 13), Position = UDim2.fromOffset(12, 11), ZIndex = 2 })
-    end
-    local page = make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 1), Visible = false, AutomaticSize = Enum.AutomaticSize.Y }, self.Content)
-    local layout = make("UIListLayout", { Padding = UDim.new(0, 11), SortOrder = Enum.SortOrder.LayoutOrder }, page)
-    local function select()
-        for _, item in pairs(self.Tabs) do
-            item.Page.Visible = false
-            tween(item.Nav, { BackgroundTransparency = .8, BackgroundColor3 = self.Theme.SurfaceHover, TextColor3 = self.Theme.Muted }, .15)
-            local previousGlow = item.Nav:FindFirstChild("LunarGlow")
-            if previousGlow then tween(previousGlow, { Transparency = 1 }, .15) end
-        end
-        page.Visible = true
-        tween(nav, { BackgroundColor3 = self.Theme.SurfaceHover, BackgroundTransparency = .3, TextColor3 = self.Theme.Text }, .15)
-        glow(nav, self.Theme.Accent, .48)
-        appear(page)
-        for index, child in ipairs(page:GetChildren()) do
-            if child:IsA("GuiObject") then appear(child, index * .025) end
-        end
-        self._activeTab = tab
-    end
-    nav.MouseButton1Click:Connect(select)
-    tab.Nav, tab.Page, tab.Layout, tab.Select = nav, page, layout, select
-    table.insert(self.Tabs, tab)
-    if #self.Tabs == 1 then select() end
+function Lunar:AddTab(data)
+    data=data or {};local tab=setmetatable({Window=self},{__index=Lunar});local title=data.Title or "Tab"
+    local nav=new("TextButton",{Text="      "..title,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=self.Theme.Muted,TextXAlignment=Enum.TextXAlignment.Left,BackgroundTransparency=1,BorderSizePixel=0,AutoButtonColor=false,Size=UDim2.new(1,0,0,35),LayoutOrder=#self.Tabs+1},self.Sidebar);corner(nav,7);icon(nav,data.Icon or "circle",self.Theme,UDim2.fromOffset(11,10),UDim2.fromOffset(14,14),2)
+    local page=new("Frame",{BackgroundTransparency=1,Visible=false,AutomaticSize=Enum.AutomaticSize.Y,Size=UDim2.new(1,0,0,1)},self.Content);new("UIListLayout",{Padding=UDim.new(0,14),SortOrder=Enum.SortOrder.LayoutOrder},page)
+    function tab:Select()for _,item in ipairs(self.Window.Tabs)do item.Page.Visible=false;item.Nav.BackgroundTransparency=1;item.Nav.TextColor3=self.Window.Theme.Muted end;page.Visible=true;nav.BackgroundColor3=self.Window.Theme.Active;nav.BackgroundTransparency=.12;nav.TextColor3=self.Window.Theme.Text end
+    nav.MouseButton1Click:Connect(function()tab:Select()end);tab.Nav=nav;tab.Page=page;table.insert(self.Tabs,tab);if #self.Tabs==1 then tab:Select()end
+    search = self.Search
+    search:GetPropertyChangedSignal("Text"):Connect(function()local query=string.lower(search.Text);for _,item in ipairs(self.Tabs)do item.Nav.Visible=query=="" or string.find(string.lower(item.Nav.Text),query,1,true)~=nil end end)
     return tab
 end
 
-function LunarUI:AddSection(options)
-    options = options or {}
-    local section = setmetatable({ Tab = self, Window = self.Window }, { __index = LunarUI })
-    local frame = make("Frame", { BackgroundColor3 = self.Window.Theme.Surface, BackgroundTransparency = .16, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 1), AutomaticSize = Enum.AutomaticSize.Y, ZIndex = 2 }, self.Page)
-    corner(frame, 10); stroke(frame, self.Window.Theme.Border, .28); padding(frame, 14)
-    local layout = make("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }, frame)
-    text(frame, options.Title or "Section", 11, self.Window.Theme.Text, { Size = UDim2.new(1, 0, 0, 18), Font = Enum.Font.GothamBold, ZIndex = 3 })
-    appear(frame, (#self.Sections or 0) * .03)
-    section.Frame, section.Layout = frame, layout
-    table.insert(self.Sections, section)
-    return section
+function Lunar:AddSection(data)
+    data=data or {};local section=setmetatable({Window=self.Window},{__index=Lunar})
+    local frame=new("Frame",{BackgroundColor3=self.Window.Theme.Surface,BackgroundTransparency=self.Window.Theme.SurfaceTransparency,BorderSizePixel=0,AutomaticSize=Enum.AutomaticSize.Y,Size=UDim2.new(1,0,0,1)},self.Page);corner(frame,9);stroke(frame,self.Window.Theme.Border,.48);pad(frame,15);new("UIListLayout",{Padding=UDim.new(0,10),SortOrder=Enum.SortOrder.LayoutOrder},frame)
+    text(frame,data.Title or "Section",11,self.Window.Theme.Text,{Size=UDim2.new(1,0,0,18),Font=Enum.Font.GothamBold});section.Frame=frame;return section
 end
-
-function LunarUI:_row(title, description)
-    local frame = make("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, description and 44 or 32), ZIndex = 3 }, self.Frame)
-    text(frame, title or "", 11, self.Window.Theme.Text, { Position = UDim2.fromOffset(0, 1), Size = UDim2.new(1, -150, 0, 18), Font = Enum.Font.GothamMedium, ZIndex = 4 })
-    if description then text(frame, description, 9, self.Window.Theme.Muted, { Position = UDim2.fromOffset(0, 19), Size = UDim2.new(1, -150, 0, 16), ZIndex = 4 }) end
-    return frame
+function Lunar:_row(title,description)
+    local row=new("Frame",{BackgroundTransparency=1,Size=UDim2.new(1,0,0,description and 46 or 30)},self.Frame);text(row,title or "",11,self.Window.Theme.Text,{Size=UDim2.new(1,-170,0,17),Font=Enum.Font.GothamMedium});if description then text(row,description,9,self.Window.Theme.Muted,{Position=UDim2.fromOffset(0,18),Size=UDim2.new(1,-170,0,22),TextWrapped=true})end;return row
 end
-
-function LunarUI:AddButton(options)
-    options = options or {}
-    local row = self:_row(options.Title or "Button", options.Description)
-    local action = button(row, options.ButtonText or "Click Me", self.Window.Theme, {
-        Name = "LunarButton", Position = UDim2.new(1, -132, .5, -14),
-        Size = UDim2.fromOffset(132, 28), BackgroundColor3 = self.Window.Theme.SurfaceHover,
-        TextColor3 = self.Window.Theme.Text, Pop = true, BackgroundTransparency = .15,
-    })
-    corner(action, 8); stroke(action, self.Window.Theme.Border, .3)
-    action.Activated:Connect(function() if options.Callback then options.Callback() end end)
-    return action
+function Lunar:AddButton(data)
+    data=data or {};local row=self:_row(data.Title or "Button",data.Description);local b=new("TextButton",{Text=data.ButtonText or "Click Me",AutoButtonColor=false,Font=Enum.Font.GothamMedium,TextSize=10,TextColor3=self.Window.Theme.Text,BackgroundColor3=self.Window.Theme.Active,BackgroundTransparency=.12,BorderSizePixel=0,Position=UDim2.new(1,-130,.5,-13),Size=UDim2.fromOffset(130,26)},row);corner(b,6);stroke(b,self.Window.Theme.Border,.55);b.MouseButton1Click:Connect(function()scalePop(b);if data.Callback then data.Callback()end end);return b
 end
-
-function LunarUI:AddToggle(options)
-    options = options or {}; local value = options.Default or false; local row = self:_row(options.Title or "Toggle Switch", options.Description)
-    local toggle = make("TextButton", { Text = "", AutoButtonColor = false, BackgroundColor3 = value and self.Window.Theme.Accent or self.Window.Theme.SurfaceHover, Position = UDim2.new(1, -44, .5, -10), Size = UDim2.fromOffset(42, 20), BackgroundTransparency = .12, ZIndex = 4 }, row); corner(toggle, 12); stroke(toggle, self.Window.Theme.Border, .35)
-    local dot = make("Frame", { BackgroundColor3 = Color3.new(1,1,1), Size = UDim2.fromOffset(14,14), Position = UDim2.fromOffset(value and 24 or 4,3), ZIndex = 5 }, toggle); corner(dot, 10)
-    local function set(new) value = new; tween(toggle, { BackgroundColor3 = value and self.Window.Theme.Accent or self.Window.Theme.SurfaceHover }, .16); tween(dot, { Position = UDim2.fromOffset(value and 24 or 4,3) }, .16); self.Window.Values[options.Flag or options.Title] = value; if options.Callback then options.Callback(value) end end
-    toggle.Activated:Connect(function() set(not value) end); set(value); return { Set = set, Value = function() return value end }
+function Lunar:AddToggle(flag,data)
+    flag,data=normalize(flag,data);local value=data.Default==true;local row=self:_row(data.Title or flag,data.Description);local b=new("TextButton",{Text="",AutoButtonColor=false,BackgroundColor3=value and Color3.fromRGB(59,204,119) or self.Window.Theme.Active,BorderSizePixel=0,Position=UDim2.new(1,-39,.5,-10),Size=UDim2.fromOffset(39,20)},row);corner(b,12);local dot=new("Frame",{BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0,Position=UDim2.fromOffset(value and 22 or 3,3),Size=UDim2.fromOffset(14,14)},b);corner(dot,10);local api
+    local function set(nextValue)value=nextValue==true;b.BackgroundColor3=value and Color3.fromRGB(59,204,119)or self.Window.Theme.Active;dot.Position=UDim2.fromOffset(value and 22 or 3,3);self.Window.Values[flag]=value;if data.Callback then data.Callback(value)end;if api then api:_set(value)end end
+    b.MouseButton1Click:Connect(function()set(not value)end);api=option(flag,value,set);set(value);return api
 end
-
-function LunarUI:AddCheckbox(options) return self:AddToggle(options) end
-
-function LunarUI:AddSlider(options)
-    options = options or {}; local min, max = options.Min or 0, options.Max or 100; local value = math.clamp(options.Default or min, min, max); local row = self:_row(options.Title or "Slider", options.Description)
-    local bar = make("TextButton", { Text = "", AutoButtonColor = false, BackgroundColor3 = self.Window.Theme.SurfaceHover, BackgroundTransparency = .15, Position = UDim2.new(1, -128, .5, -3), Size = UDim2.fromOffset(112, 6), ZIndex = 4 }, row); corner(bar, 5); stroke(bar, self.Window.Theme.Border, .25)
-    local fill = make("Frame", { BackgroundColor3 = self.Window.Theme.Accent, Size = UDim2.new((value-min)/(max-min),0,1,0), ZIndex = 5 }, bar); corner(fill,5)
-    local handle = make("Frame", { BackgroundColor3 = Color3.fromRGB(255,255,255), BorderSizePixel = 0, Size = UDim2.fromOffset(10,10), Position = UDim2.new((value-min)/(max-min), -5, .5, -5), ZIndex = 6 }, bar); corner(handle, 10); glow(handle, self.Window.Theme.Accent, .55)
-    local valueLabel = text(row, tostring(value), 10, self.Window.Theme.Muted, { Position = UDim2.new(1,-24,.5,-9), Size = UDim2.fromOffset(22,18), TextXAlignment = Enum.TextXAlignment.Right, ZIndex = 4 })
-    local function set(number) value = math.clamp(math.floor(number + .5), min, max); local ratio = (value-min)/(max-min); fill.Size = UDim2.new(ratio,0,1,0); handle.Position = UDim2.new(ratio, -5, .5, -5); valueLabel.Text = tostring(value); self.Window.Values[options.Flag or options.Title] = value; if options.Callback then options.Callback(value) end end
-    local dragging = false
-    local function update(input) set(min + (max-min) * math.clamp((input.Position.X-bar.AbsolutePosition.X)/bar.AbsoluteSize.X,0,1)) end
-    bar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging=true; update(input) end end)
-    UserInputService.InputChanged:Connect(function(input) if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then update(input) end end)
-    UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging=false end end); set(value); return { Set=set, Value=function() return value end }
+function Lunar:AddCheckbox(flag,data)return self:AddToggle(flag,data)end
+function Lunar:AddSlider(flag,data)
+    flag,data=normalize(flag,data);local min,max=data.Min or 0,data.Max or 100;local value=math.clamp(data.Default or min,min,max);local row=self:_row(data.Title or flag,data.Description);local bar=new("TextButton",{Text="",AutoButtonColor=false,BackgroundColor3=self.Window.Theme.Border,BorderSizePixel=0,Position=UDim2.new(1,-145,.5,-3),Size=UDim2.fromOffset(107,6)},row);corner(bar,6);local fill=new("Frame",{BackgroundColor3=self.Window.Theme.Accent,BorderSizePixel=0,Size=UDim2.new((value-min)/(max-min),0,1,0)},bar);corner(fill,6);local number=text(row,tostring(value),9,self.Window.Theme.Muted,{Position=UDim2.new(1,-30,.5,-9),Size=UDim2.fromOffset(30,17),TextXAlignment=Enum.TextXAlignment.Right});local api;local moving=false
+    local function set(n)value=math.clamp(math.floor(n+.5),min,max);fill.Size=UDim2.new((value-min)/(max-min),0,1,0);number.Text=tostring(value);self.Window.Values[flag]=value;if data.Callback then data.Callback(value)end;if api then api:_set(value)end end
+    local function setPointer(input)set(min+(max-min)*math.clamp((input.Position.X-bar.AbsolutePosition.X)/bar.AbsoluteSize.X,0,1))end
+    bar.InputBegan:Connect(function(i)if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then moving=true;setPointer(i)end end);UserInputService.InputChanged:Connect(function(i)if moving then setPointer(i)end end);UserInputService.InputEnded:Connect(function()moving=false end);api=option(flag,value,set);set(value);return api
 end
-
-function LunarUI:AddTextbox(options)
-    options = options or {}; local row = self:_row(options.Title or "Textbox", options.Description)
-    local box = make("TextBox", { Text = options.Default or "", PlaceholderText = options.Placeholder or "Type here...", ClearTextOnFocus = false, TextColor3 = self.Window.Theme.Text, PlaceholderColor3 = self.Window.Theme.Muted, TextSize = 10, Font = Enum.Font.Gotham, BackgroundColor3 = self.Window.Theme.Background, Position = UDim2.new(1,-150,.5,-14), Size = UDim2.fromOffset(150,28) }, row); corner(box,6); stroke(box,self.Window.Theme.Border,.2); padding(box,8)
-    box.FocusLost:Connect(function() self.Window.Values[options.Flag or options.Title] = box.Text; if options.Callback then options.Callback(box.Text) end end); return box
-end
-
-function LunarUI:AddDropdown(options)
-    options = options or {}; local values, selected = options.Values or {}, options.Default or "Select..."; local row = self:_row(options.Title or "Dropdown", options.Description)
-    local selector = button(row, tostring(selected), self.Window.Theme, { Position = UDim2.new(1,-150,.5,-14), Size = UDim2.fromOffset(150,28), BackgroundColor3 = self.Window.Theme.Background, BackgroundTransparency = .2, TextColor3 = self.Window.Theme.Muted, TextXAlignment = Enum.TextXAlignment.Left })
-    local arrow = text(selector, "▾", 13, self.Window.Theme.Muted, { Position = UDim2.new(1,-22,0,0), Size = UDim2.fromOffset(20,28), TextXAlignment = Enum.TextXAlignment.Center, ZIndex = 3, Font = Enum.Font.GothamBold })
-    local listHeight = math.min(#values, 5) * 27 + 8
-    local list = make("Frame", { Name="LunarDropdownOverlay", Visible=false, ClipsDescendants=true, BackgroundColor3=self.Window.Theme.SurfaceHover, BackgroundTransparency=.12, BorderSizePixel=0, Size=UDim2.fromOffset(150,0), ZIndex=50 }, self.Window.Gui); corner(list,8); stroke(list,self.Window.Theme.Border,.25); padding(list,4)
-    local listLayout = make("UIListLayout",{Padding=UDim.new(0,2)},list)
-    local opened = false
-    local function setOpen(state)
-        opened = state
-        if state then
-            list.Position=UDim2.fromOffset(selector.AbsolutePosition.X,selector.AbsolutePosition.Y+selector.AbsoluteSize.Y+4)
-            list.Visible=true; list.Size=UDim2.fromOffset(150,0)
-            tween(list,{Size=UDim2.fromOffset(150,listHeight)},.2); tween(arrow,{Rotation=180},.2)
-        else
-            tween(list,{Size=UDim2.fromOffset(150,0)},.16); tween(arrow,{Rotation=0},.16)
-            task.delay(LunarUI.AnimationsEnabled and .16 or 0,function()if not opened and list.Parent then list.Visible=false end end)
-        end
+local function dropdown(section,flag,data,multi)
+    local values=data.Values or {};local selected=multi and {} or data.Default;if not multi and type(selected)=="number"then selected=values[selected]end;if multi then for _,value in ipairs(data.Default or {})do selected[value]=true end end
+    local row=section:_row(data.Title or flag,data.Description);local title=multi and "Select..."or(selected or "Select...");local select=new("TextButton",{Text=title.."                 v",AutoButtonColor=false,Font=Enum.Font.Gotham,TextSize=10,TextColor3=section.Window.Theme.Muted,TextXAlignment=Enum.TextXAlignment.Left,BackgroundColor3=section.Window.Theme.Background,BorderSizePixel=0,Position=UDim2.new(1,-150,.5,-13),Size=UDim2.fromOffset(150,26)},row);corner(select,6);stroke(select,section.Window.Theme.Border,.55)
+    local overlay=new("Frame",{Visible=false,BackgroundColor3=section.Window.Theme.Surface,BackgroundTransparency=.08,BorderSizePixel=0,Size=UDim2.fromOffset(150,#values*26+8),ZIndex=80},section.Window.Gui);corner(overlay,7);stroke(overlay,section.Window.Theme.Border,.2);pad(overlay,4);new("UIListLayout",{Padding=UDim.new(0,2)},overlay);local opened=false;local api
+    local function display()
+        if multi then local out={};for _,item in ipairs(values)do if selected[item]then table.insert(out,tostring(item))end end;select.Text=(#out>0 and table.concat(out,", ")or"Select...").."                 v"else select.Text=tostring(selected or "Select...").."                 v"end
     end
-    local function choose(value) selected=value; selector.Text=tostring(value); setOpen(false); self.Window.Values[options.Flag or options.Title]=value; if options.Callback then options.Callback(value) end end
-    for _, value in ipairs(values) do local choice=button(list,tostring(value),self.Window.Theme,{Size=UDim2.new(1,0,0,25),BackgroundTransparency=1,TextColor3=self.Window.Theme.Text,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=51}); choice.MouseButton1Click:Connect(function() choose(value) end) end
-    selector.MouseButton1Click:Connect(function() setOpen(not opened) end); return { Set=choose, Value=function() return selected end }
-end
-
-function LunarUI:AddMultiDropdown(options)
-    options = options or {}; options.Default = options.Default or {}; local selected = {}
-    for _, item in ipairs(options.Default) do selected[item] = true end
-    local display = function() local parts={}; for item,on in pairs(selected) do if on then table.insert(parts,tostring(item)) end end; return #parts>0 and table.concat(parts,", ") or "Select..." end
-    local control = self:AddDropdown({ Title=options.Title or "Multi-dropdown", Description=options.Description, Values=options.Values, Default=display(), Flag=options.Flag, Callback=function(value) selected[value]=not selected[value]; if options.Callback then options.Callback(selected) end end })
-    return control
-end
-
-function LunarUI:AddLabel(options) options=options or {}; return text(self.Frame, options.Text or options.Title or "Label", 10, self.Window.Theme.Muted, { Size=UDim2.new(1,0,0,18) }) end
-function LunarUI:AddParagraph(options) options=options or {}; local frame=make("Frame",{BackgroundColor3=self.Window.Theme.Background,BackgroundTransparency=.18,BorderSizePixel=0,Size=UDim2.new(1,0,0,52)},self.Frame);corner(frame,8);stroke(frame,self.Window.Theme.Border,.2);padding(frame,9);text(frame,options.Title or "Paragraph",10,self.Window.Theme.Text,{Size=UDim2.new(1,0,0,16),Font=Enum.Font.GothamBold});text(frame,options.Content or "Discription",9,self.Window.Theme.Muted,{Position=UDim2.fromOffset(0,17),Size=UDim2.new(1,0,0,26),TextWrapped=true});return frame end
-function LunarUI:AddSeparator() return make("Frame",{BackgroundColor3=self.Window.Theme.Border,BorderSizePixel=0,Size=UDim2.new(1,0,0,1)},self.Frame) end
-function LunarUI:AddImage(options) options=options or {}; local image=options.Image or "";if type(image)=="number"then image="rbxassetid://"..image end;return make("ImageLabel",{BackgroundColor3=self.Window.Theme.Background,Image=image,ScaleType=Enum.ScaleType.Crop,Size=UDim2.new(1,0,0,options.Height or 100)},self.Frame) end
-function LunarUI:AddDecal(options) options=options or {};options.Image=options.Image or options.Decal or options.AssetId;return self:AddImage(options) end
-function LunarUI:AddKeybind(options) options=options or {}; local value=options.Default or Enum.KeyCode.RightControl; local row=self:_row(options.Title or "Keybind",options.Description);local key=button(row,value.Name,self.Window.Theme,{Position=UDim2.new(1,-90,.5,-14),Size=UDim2.fromOffset(90,28)});key.MouseButton1Click:Connect(function()key.Text="Press a key...";local c;c=UserInputService.InputBegan:Connect(function(i)if i.UserInputType==Enum.UserInputType.Keyboard then value=i.KeyCode;key.Text=value.Name;c:Disconnect();if options.Callback then options.Callback(value) end end end)end);return key end
-function LunarUI:AddColorPicker(options) options=options or {}; local value=options.Default or self.Window.Theme.Accent; local row=self:_row(options.Title or "Color",options.Description);local swatch=button(row,"",self.Window.Theme,{Position=UDim2.new(1,-32,.5,-13),Size=UDim2.fromOffset(32,26),BackgroundColor3=value});swatch.MouseButton1Click:Connect(function()value=Color3.fromHSV((os.clock()%8)/8,.65,1);swatch.BackgroundColor3=value;if options.Callback then options.Callback(value) end end);return {Set=function(v)value=v;swatch.BackgroundColor3=v end,Value=function()return value end} end
-function LunarUI:AddProgress(options)
-    options=options or {}; local value=math.clamp(options.Value or 0,0,1); local row=self:_row(options.Title or "Progress",options.Description)
-    local bar=make("Frame",{BackgroundColor3=self.Window.Theme.Border,BorderSizePixel=0,Position=UDim2.new(1,-150,.5,-3),Size=UDim2.fromOffset(150,6)},row);corner(bar,4)
-    local fill=make("Frame",{BackgroundColor3=self.Window.Theme.Accent,BorderSizePixel=0,Size=UDim2.new(value,0,1,0)},bar);corner(fill,4)
-    return {Set=function(v)value=math.clamp(v,0,1);tween(fill,{Size=UDim2.new(value,0,1,0)},.2)end,Value=function()return value end}
-end
-function LunarUI:AddSearch(options)
-    options=options or {}; local row=self:_row(options.Title or "Search",options.Description)
-    local box=make("TextBox",{Text="",PlaceholderText=options.Placeholder or "Search...",ClearTextOnFocus=false,TextColor3=self.Window.Theme.Text,PlaceholderColor3=self.Window.Theme.Muted,TextSize=10,Font=Enum.Font.Gotham,BackgroundColor3=self.Window.Theme.Background,Position=UDim2.new(1,-150,.5,-14),Size=UDim2.fromOffset(150,28)},row);corner(box,6);stroke(box,self.Window.Theme.Border,.2);padding(box,8)
-    box:GetPropertyChangedSignal("Text"):Connect(function() if options.Callback then options.Callback(box.Text) end end);return box
-end
-
-function LunarUI:Notify(options)
-    options = options or {}; local toast = make("Frame",{BackgroundColor3=self.Theme.Surface,BorderSizePixel=0,AnchorPoint=Vector2.new(1,1),Position=UDim2.new(1,-18,1,65),Size=UDim2.fromOffset(275,65)},self.Gui);corner(toast,9);stroke(toast,self.Theme.Border,.15)
-    text(toast,options.Icon or "✦",19,self.Theme.Accent,{Position=UDim2.fromOffset(13,0),Size=UDim2.fromOffset(26,65),TextXAlignment=Enum.TextXAlignment.Center})
-    text(toast,options.Title or "Lunar UI",11,self.Theme.Text,{Position=UDim2.fromOffset(49,11),Size=UDim2.new(1,-60,0,17),Font=Enum.Font.GothamBold})
-    text(toast,options.Content or "",9,self.Theme.Muted,{Position=UDim2.fromOffset(49,29),Size=UDim2.new(1,-60,0,24),TextWrapped=true})
-    tween(toast,{Position=UDim2.new(1,-18,1,-18)},.3);task.delay(options.Duration or 4,function()if toast.Parent then tween(toast,{Position=UDim2.new(1,-18,1,65)},.25);task.wait(.25);toast:Destroy()end end)
-end
-
-function LunarUI:GetConfig() return HttpService:JSONEncode(self.Values) end
-function LunarUI:LoadConfig(config) local data=type(config)=="string" and HttpService:JSONDecode(config) or config;for flag,value in pairs(data)do if LunarUI.Options[flag] then LunarUI.Options[flag]:SetValue(value) else self.Values[flag]=value end end;return data end
-function LunarUI:SelectTab(tab)
-    if type(tab) == "number" then tab = self.Tabs[tab] end
-    if tab and tab.Select then tab:Select() end
-    return tab
-end
-function LunarUI:SetTheme(name)
-    local nextTheme = Themes[name]
-    if not nextTheme then return false, "Unknown theme: " .. tostring(name) end
-    local previous = self.Theme
-    local properties = { "BackgroundColor3", "TextColor3", "ImageColor3", "ScrollBarImageColor3", "Color" }
-    for _, object in ipairs(self.Gui:GetDescendants()) do
-        for _, property in ipairs(properties) do
-            local ok, current = pcall(function() return object[property] end)
-            if ok then
-                for role, oldColor in pairs(previous) do
-                    if typeof(oldColor) == "Color3" and current == oldColor and typeof(nextTheme[role]) == "Color3" then
-                        pcall(function() object[property] = nextTheme[role] end)
-                    end
-                end
-            end
-        end
+    local function update(value)
+        if multi then selected[value]=not selected[value]else selected=value;opened=false;overlay.Visible=false end
+        display()
+        section.Window.Values[flag]=selected
+        if data.Callback then data.Callback(selected)end
+        if api then api:_set(selected)end
     end
-    local glassGradient = self.Root:FindFirstChild("LunarGlassGradient")
-    if glassGradient and glassGradient:IsA("UIGradient") then
-        glassGradient.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, nextTheme.Accent:Lerp(nextTheme.Background, .7)),
-            ColorSequenceKeypoint.new(.35, nextTheme.Background),
-            ColorSequenceKeypoint.new(1, nextTheme.SurfaceHover),
-        })
+    for _,item in ipairs(values)do local choice=new("TextButton",{Text=(multi and "[ ]  "or"")..tostring(item),AutoButtonColor=false,Font=Enum.Font.Gotham,TextSize=10,TextColor3=section.Window.Theme.Text,TextXAlignment=Enum.TextXAlignment.Left,BackgroundTransparency=1,BorderSizePixel=0,Size=UDim2.new(1,0,0,24),ZIndex=81},overlay);choice.MouseButton1Click:Connect(function()update(item);if multi then choice.Text=(selected[item]and"[x]  "or"[ ]  ")..tostring(item)end end)end
+    select.MouseButton1Click:Connect(function()opened=not opened;overlay.Position=UDim2.fromOffset(select.AbsolutePosition.X,select.AbsolutePosition.Y+select.AbsoluteSize.Y+4);overlay.Visible=opened end);api=option(flag,multi and selected or selected,function(v)if multi then selected=v or {}else selected=v end;display()end);display();return api
+end
+function Lunar:AddDropdown(flag,data)flag,data=normalize(flag,data);return dropdown(self,flag,data,false)end
+function Lunar:AddMultiDropdown(flag,data)flag,data=normalize(flag,data);return dropdown(self,flag,data,true)end
+function Lunar:AddInput(flag,data)
+    flag,data=normalize(flag,data);local row=self:_row(data.Title or flag,data.Description);local box=new("TextBox",{Text=data.Default or "",PlaceholderText=data.Placeholder or "Type here...",ClearTextOnFocus=false,Font=Enum.Font.Gotham,TextSize=10,TextColor3=self.Window.Theme.Text,PlaceholderColor3=self.Window.Theme.Muted,BackgroundColor3=self.Window.Theme.Background,BorderSizePixel=0,Position=UDim2.new(1,-150,.5,-13),Size=UDim2.fromOffset(150,26)},row);corner(box,6);stroke(box,self.Window.Theme.Border,.55);local api
+    local function set(value)box.Text=tostring(value or "");self.Window.Values[flag]=box.Text;if data.Callback then data.Callback(box.Text)end;if api then api:_set(box.Text)end end
+    box.FocusLost:Connect(function()set(box.Text)end);api=option(flag,box.Text,set);return api
+end
+Lunar.AddTextbox=Lunar.AddInput
+function Lunar:AddKeybind(flag,data)
+    flag,data=normalize(flag,data);local key=data.Default or Enum.KeyCode.RightControl
+    if type(key)=="string" then key=Enum.KeyCode[key] or Enum.KeyCode.RightControl end
+    local row=self:_row(data.Title or flag,data.Description);local bind=new("TextButton",{Text=key.Name,AutoButtonColor=false,Font=Enum.Font.Gotham,TextSize=10,TextColor3=self.Window.Theme.Text,BackgroundColor3=self.Window.Theme.Active,BorderSizePixel=0,Position=UDim2.new(1,-100,.5,-13),Size=UDim2.fromOffset(100,26)},row);corner(bind,6)
+    local api;local listening=false
+    local function set(value)
+        if type(value)=="string" then value=Enum.KeyCode[value] or key end
+        key=value;bind.Text=key.Name;self.Window.Values[flag]=key.Name
+        if data.ChangedCallback then data.ChangedCallback(key)end
+        if api then api:_set(key)end
     end
-    if self.SeasonalEffects then self.SeasonalEffects:Destroy(); self.SeasonalEffects = nil end
-    self.SeasonalEffects = createSeasonalEffects(self.Gui, name, nextTheme)
-    self.Theme, self.ThemeName = nextTheme, name
-    self.Values["LunarTheme"] = name
-    return true
-end
-function LunarUI:SetAnimationsEnabled(enabled)
-    self.AnimationsEnabled = enabled ~= false
-    return self.AnimationsEnabled
-end
-function LunarUI:SetProfileNameVisible(visible)
-    visible = visible ~= false
-    self.Values["LunarProfileNames"] = visible
-    for _, label in ipairs({ self.ProfileName, self.ProfileUsername }) do
-        if label then
-            if visible then
-                label.Visible = true
-                label.TextTransparency = 1
-                tween(label, { TextTransparency = 0 }, .16)
-            else
-                tween(label, { TextTransparency = 1 }, .13)
-                task.delay(LunarUI.AnimationsEnabled and .13 or 0, function()
-                    if label.Parent and not self.Values["LunarProfileNames"] then label.Visible = false end
-                end)
-            end
-        end
-    end
-    return visible
-end
-function LunarUI:SetCustomCursor(enabled, assetId)
-    if self.Cursor then self.Cursor:Destroy(); self.Cursor = nil end
-    if enabled ~= false and UserInputService.MouseEnabled then
-        self.Cursor = createCursor(self.Gui, self.Theme.Accent, assetId or self.CursorIcon)
-        self.CursorIcon = assetId or self.CursorIcon
-        UserInputService.MouseIconEnabled = false
-        local activeCursor = self.Cursor
-        UserInputService.InputChanged:Connect(function(input)
-            if activeCursor.Parent and input.UserInputType == Enum.UserInputType.MouseMovement then
-                activeCursor.Position = UDim2.fromOffset(input.Position.X, input.Position.Y)
-            end
+    bind.MouseButton1Click:Connect(function()
+        if listening then return end;listening=true;bind.Text="Press key..."
+        local connection;connection=UserInputService.InputBegan:Connect(function(input)
+            if input.UserInputType==Enum.UserInputType.Keyboard then set(input.KeyCode);listening=false;connection:Disconnect()end
         end)
-    else
-        UserInputService.MouseIconEnabled = true
-    end
-    return self.Cursor
-end
-function LunarUI:SetAnimationStyle(style)
-    assert(style == "Fluid" or style == "Soft" or style == "Fast", "Animation style must be Fluid, Soft, or Fast.")
-    self.AnimationStyle = style
-    return style
-end
-function LunarUI:Toggle()
-    self.Root.Visible = not self.Root.Visible
-    return self.Root.Visible
-end
-function LunarUI:Dialog(options)
-    options=options or {}
-    local shade=make("Frame",{BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=.45,BorderSizePixel=0,Size=UDim2.fromScale(1,1),ZIndex=30},self.Gui)
-    local dialog=make("Frame",{BackgroundColor3=self.Theme.Surface,BorderSizePixel=0,AnchorPoint=Vector2.new(.5,.5),Position=UDim2.fromScale(.5,.5),Size=UDim2.fromOffset(330,150),ZIndex=31},shade);corner(dialog,10);stroke(dialog,self.Theme.Border,.15);padding(dialog,16)
-    text(dialog,options.Title or "Lunar UI",13,self.Theme.Text,{Size=UDim2.new(1,0,0,22),Font=Enum.Font.GothamBold,ZIndex=32})
-    text(dialog,options.Content or "",10,self.Theme.Muted,{Position=UDim2.fromOffset(16,43),Size=UDim2.new(1,-32,0,48),TextWrapped=true,ZIndex=32})
-    local holder=make("Frame",{BackgroundTransparency=1,Position=UDim2.new(0,16,1,-43),Size=UDim2.new(1,-32,0,28),ZIndex=32},dialog)
-    local layout=make("UIListLayout",{FillDirection=Enum.FillDirection.Horizontal,HorizontalAlignment=Enum.HorizontalAlignment.Right,Padding=UDim.new(0,6)},holder)
-    for _, choice in ipairs(options.Buttons or {{Title="Close"}}) do
-        local action=button(holder,choice.Title or "Action",self.Theme,{Size=UDim2.fromOffset(78,28),BackgroundColor3=choice.Primary and self.Theme.Accent or self.Theme.SurfaceHover,TextColor3=choice.Primary and Color3.new(1,1,1) or self.Theme.Text,ZIndex=33})
-        action.MouseButton1Click:Connect(function() if choice.Callback then choice.Callback() end shade:Destroy() end)
-    end
-    return dialog
-end
-function LunarUI:Destroy() self.Unloaded=true; UserInputService.MouseIconEnabled=true; self.Gui:Destroy() end
-
--- Fluent-like ergonomic option objects, implemented specifically for Lunar UI.
-LunarUI.Options = LunarUI.Options or {}
-local function optionObject(flag, initial, set)
-    local option={Value=initial,_changed={}}
-    function option:SetValue(value) set(value) end
-    function option:OnChanged(callback) table.insert(self._changed,callback);return callback end
-    function option:_emit(value) self.Value=value;for _,callback in ipairs(self._changed) do task.spawn(callback,value) end end
-    LunarUI.Options[flag]=option
-    return option
-end
-local function normalize(flag, options)
-    if type(flag)=="table" then options=flag;flag=options.Flag or options.Title end
-    options=options or {};flag=flag or options.Flag or options.Title or ("Option_"..tostring(os.clock()))
-    options.Flag=flag
-    return flag,options
-end
-local rawToggle,rawSlider,rawDropdown,rawTextbox,rawKeybind,rawColorpicker=LunarUI.AddToggle,LunarUI.AddSlider,LunarUI.AddDropdown,LunarUI.AddTextbox,LunarUI.AddKeybind,LunarUI.AddColorPicker
-function LunarUI:AddToggle(flag,options)
-    flag,options=normalize(flag,options);local user=options.Callback;local api
-    options.Callback=function(value) if user then user(value) end;if api then api:_emit(value) end end
-    local control=rawToggle(self,options);api=optionObject(flag,control:Value(),function(value)control.Set(value)end);return api
-end
-function LunarUI:AddCheckbox(flag,options) return self:AddToggle(flag,options) end
-function LunarUI:AddSlider(flag,options)
-    flag,options=normalize(flag,options);local user=options.Callback;local api
-    options.Callback=function(value) if user then user(value) end;if api then api:_emit(value) end end
-    local control=rawSlider(self,options);api=optionObject(flag,control:Value(),function(value)control.Set(value)end);return api
-end
-function LunarUI:AddDropdown(flag,options)
-    flag,options=normalize(flag,options)
-    if options.Multi then return self:AddMultiDropdown(flag,options) end
-    if type(options.Default)=="number" then options.Default=(options.Values or {})[options.Default] end
-    local user=options.Callback;local api
-    options.Callback=function(value)if user then user(value)end;if api then api:_emit(value)end end
-    local control=rawDropdown(self,options);api=optionObject(flag,control:Value(),function(value)control.Set(value)end);return api
-end
-function LunarUI:AddMultiDropdown(flag,options)
-    flag,options=normalize(flag,options);local selected={}
-    if type(options.Default)=="table" then for key,value in pairs(options.Default) do selected[type(key)=="number" and value or key]=type(key)=="number" and true or value end end
-    local values=options.Values or {};local row=self:_row(options.Title or flag,options.Description)
-    local selector=button(row,"Select...",self.Window.Theme,{Position=UDim2.new(1,-150,.5,-14),Size=UDim2.fromOffset(150,28),BackgroundColor3=self.Window.Theme.Background,TextColor3=self.Window.Theme.Muted})
-    local arrow=text(selector,"v",13,self.Window.Theme.Muted,{Position=UDim2.new(1,-25,0,0),Size=UDim2.fromOffset(20,28),TextXAlignment=Enum.TextXAlignment.Center,ZIndex=3,Font=Enum.Font.GothamBold})
-    local listHeight=math.min(#values,6)*27+8
-    local list=make("Frame",{Name="LunarMultiDropdownOverlay",Visible=false,BackgroundColor3=self.Window.Theme.SurfaceHover,BackgroundTransparency=.08,BorderSizePixel=0,Size=UDim2.fromOffset(150,0),ZIndex=50,ClipsDescendants=true},self.Window.Gui);corner(list,7);stroke(list,self.Window.Theme.Border,.2);padding(list,4);make("UIListLayout",{Padding=UDim.new(0,2)},list)
-    local api
-    local function render() local parts={};for _,value in ipairs(values)do if selected[value]then table.insert(parts,tostring(value))end end;selector.Text=#parts>0 and table.concat(parts,", ")or"Select...";self.Window.Values[flag]=selected;if options.Callback then options.Callback(selected)end;if api then api:_emit(selected)end end
-    for _,value in ipairs(values)do local item=button(list,(selected[value]and"✓  "or"   ")..tostring(value),self.Window.Theme,{Size=UDim2.new(1,0,0,25),BackgroundTransparency=1,TextColor3=self.Window.Theme.Text,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=51});item.MouseButton1Click:Connect(function()selected[value]=not selected[value];item.Text=(selected[value]and"✓  "or"   ")..tostring(value);render()end)end
-    local opened=false
-    selector.MouseButton1Click:Connect(function()
-        opened=not opened
-        if opened then
-            list.Position=UDim2.fromOffset(selector.AbsolutePosition.X,selector.AbsolutePosition.Y+selector.AbsoluteSize.Y+4);list.Visible=true;list.Size=UDim2.fromOffset(150,0)
-            tween(list,{Size=UDim2.fromOffset(150,listHeight)},.2);tween(arrow,{Rotation=180},.2)
-        else
-            tween(list,{Size=UDim2.fromOffset(150,0)},.16);tween(arrow,{Rotation=0},.16)
-            task.delay(LunarUI.AnimationsEnabled and .16 or 0,function()if not opened and list.Parent then list.Visible=false end end)
-        end
     end)
-    api=optionObject(flag,selected,function(value)selected=value or {};render()end);render();return api
-end
-function LunarUI:AddInput(flag,options)
-    flag,options=normalize(flag,options);local user=options.Callback;local api
-    options.Callback=function(value)if options.Numeric then value=tonumber(value)or 0 end;if user then user(value)end;if api then api:_emit(value)end end
-    local control=rawTextbox(self,options)
-    if not options.Finished then control:GetPropertyChangedSignal("Text"):Connect(function() options.Callback(control.Text) end) end
-    api=optionObject(flag,control.Text,function(value)control.Text=tostring(value);options.Callback(control.Text)end);return api
-end
-function LunarUI:AddTextbox(flag,options) return self:AddInput(flag,options) end
-function LunarUI:AddColorpicker(flag,options)
-    flag,options=normalize(flag,options);local user=options.Callback;local api
-    options.Callback=function(value)if user then user(value)end;if api then api:_emit(value)end end
-    local control=rawColorpicker(self,options);api=optionObject(flag,control:Value(),function(value)control.Set(value)end);return api
-end
-function LunarUI:AddColorPicker(flag,options) return self:AddColorpicker(flag,options) end
-function LunarUI:AddKeybind(flag,options)
-    flag,options=normalize(flag,options);local user=options.Callback;local api
-    if type(options.Default)=="string" then options.Default=Enum.KeyCode[options.Default] or Enum.KeyCode.RightControl end
-    options.Callback=function(value)if api then api:_emit(value)end end
-    local control=rawKeybind(self,options);api=optionObject(flag,options.Default or Enum.KeyCode.RightControl,function(value)control.Text=typeof(value)=="EnumItem"and value.Name or tostring(value)end)
-    local mode,state,clicks=options.Mode or "Toggle",false,{}
-    local function enum(value)
-        if typeof(value)=="EnumItem" then return value end
-        return Enum.KeyCode[value] or (value=="MB1" and Enum.UserInputType.MouseButton1) or (value=="MB2" and Enum.UserInputType.MouseButton2)
-    end
-    local function match(input)
-        local value=enum(api.Value)
-        return value and (input.KeyCode==value or input.UserInputType==value)
-    end
-    function api:GetState() return mode=="Always" or state end
-    function api:OnClick(callback)table.insert(clicks,callback);return callback end
-    function api:SetValue(value,newMode)
-        self.Value=value;mode=newMode or mode;control.Text=typeof(value)=="EnumItem"and value.Name or tostring(value)
-        if options.ChangedCallback then options.ChangedCallback(enum(value)) end
-        self:_emit(value)
-    end
     UserInputService.InputBegan:Connect(function(input,processed)
-        if processed or not match(input) then return end
-        if mode=="Hold" then state=true elseif mode=="Toggle" then state=not state else state=true end
-        if user then user(state) end
-        for _,callback in ipairs(clicks)do task.spawn(callback,state)end
+        if not processed and input.KeyCode==key and data.Callback then data.Callback(true)end
     end)
-    UserInputService.InputEnded:Connect(function(input)
-        if mode=="Hold" and match(input) then state=false;if user then user(false)end end
-    end)
-    return api
+    api=option(flag,key,set);function api:GetState()return false end;return api
 end
+function Lunar:AddColorpicker(flag,data)
+    flag,data=normalize(flag,data);local color=data.Default or self.Window.Theme.Accent;local row=self:_row(data.Title or flag,data.Description)
+    local swatch=new("TextButton",{Text="",AutoButtonColor=false,BackgroundColor3=color,BorderSizePixel=0,Position=UDim2.new(1,-30,.5,-13),Size=UDim2.fromOffset(30,26)},row);corner(swatch,6)
+    local api;local function set(value)color=value;swatch.BackgroundColor3=color;self.Window.Values[flag]=color;if data.Callback then data.Callback(color)end;if api then api:_set(color)end end
+    swatch.MouseButton1Click:Connect(function()local hue=(os.clock()%10)/10;set(Color3.fromHSV(hue,.55,1))end);api=option(flag,color,set);return api
+end
+Lunar.AddColorPicker=Lunar.AddColorpicker
+function Lunar:AddProgress(data)
+    data=data or {};local value=math.clamp(data.Value or 0,0,1);local row=self:_row(data.Title or "Progress",data.Description);local bar=new("Frame",{BackgroundColor3=self.Window.Theme.Border,BorderSizePixel=0,Position=UDim2.new(1,-150,.5,-3),Size=UDim2.fromOffset(150,6)},row);corner(bar,6);local fill=new("Frame",{BackgroundColor3=self.Window.Theme.Accent,BorderSizePixel=0,Size=UDim2.new(value,0,1,0)},bar);corner(fill,6);return{Set=function(_,nextValue)value=math.clamp(nextValue,0,1);fill.Size=UDim2.new(value,0,1,0)end,Value=function()return value end}
+end
+function Lunar:AddParagraph(data)data=data or {};local card=new("Frame",{BackgroundColor3=self.Window.Theme.Surface,BackgroundTransparency=self.Window.Theme.SurfaceTransparency,BorderSizePixel=0,Size=UDim2.new(1,0,0,63)},self.Frame);corner(card,7);stroke(card,self.Window.Theme.Border,.55);text(card,data.Title or "Paragraph",10,self.Window.Theme.Text,{Position=UDim2.fromOffset(10,10),Size=UDim2.new(1,-20,0,16),Font=Enum.Font.GothamBold});text(card,data.Content or "",9,self.Window.Theme.Muted,{Position=UDim2.fromOffset(10,29),Size=UDim2.new(1,-20,0,22),TextWrapped=true});return card end
+function Lunar:AddLabel(data)data=data or {};return text(self.Frame,data.Text or data.Title or "Label",10,self.Window.Theme.Muted,{Size=UDim2.new(1,0,0,18)})end
+function Lunar:AddSeparator()return new("Frame",{BackgroundColor3=self.Window.Theme.Border,BorderSizePixel=0,Size=UDim2.new(1,0,0,1)},self.Frame)end
+function Lunar:AddImage(data)data=data or {};local id=data.Image or data.AssetId or "";if type(id)=="number"then id="rbxassetid://"..id end;return new("ImageLabel",{BackgroundColor3=self.Window.Theme.Background,BorderSizePixel=0,Image=id,ScaleType=Enum.ScaleType.Crop,Size=UDim2.new(1,0,0,data.Height or 110)},self.Frame)end
+Lunar.AddDecal=Lunar.AddImage
+function Lunar:Notify(data)data=data or {};local n=new("Frame",{BackgroundColor3=self.Theme.Surface,BackgroundTransparency=self.Theme.SurfaceTransparency,BorderSizePixel=0,AnchorPoint=Vector2.new(1,1),Position=UDim2.new(1,-18,1,-18),Size=UDim2.fromOffset(260,64),ZIndex=150},self.Gui);corner(n,9);stroke(n,self.Theme.Border,.3);text(n,data.Title or "Lunar UI",11,self.Theme.Text,{Position=UDim2.fromOffset(13,11),Size=UDim2.new(1,-26,0,16),Font=Enum.Font.GothamBold,ZIndex=151});text(n,data.Content or "",9,self.Theme.Muted,{Position=UDim2.fromOffset(13,29),Size=UDim2.new(1,-26,0,22),TextWrapped=true,ZIndex=151});if data.Duration~=nil then task.delay(data.Duration or 4,function()if n.Parent then n:Destroy()end end)end;return n end
+function Lunar:SetTheme(name)if not Themes[name]then return false end;self.Theme=Themes[name];self.ThemeName=name;self.Root.BackgroundColor3=self.Theme.Background;self.Sidebar.BackgroundColor3=self.Theme.Surface;return true end
+function Lunar:SetAnimationsEnabled(enabled)Lunar.Animations=enabled~=false;return Lunar.Animations end
+function Lunar:SetAnimationStyle()return "Static" end
+function Lunar:SetProfileNameVisible()return false end
+function Lunar:Toggle()self.Root.Visible=not self.Root.Visible;return self.Root.Visible end
+function Lunar:SelectTab(tab)if type(tab)=="number"then tab=self.Tabs[tab]end;if tab then tab:Select()end end
+function Lunar:GetConfig()return HttpService:JSONEncode(self.Values)end
+function Lunar:LoadConfig(config)local data=type(config)=="string"and HttpService:JSONDecode(config)or config;for key,value in pairs(data or {})do if Lunar.Options[key]then Lunar.Options[key]:SetValue(value)end end end
+function Lunar:Destroy()self.Gui:Destroy()end
 
-return LunarUI
+return Lunar
