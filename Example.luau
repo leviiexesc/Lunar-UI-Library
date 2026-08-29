@@ -1,80 +1,139 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local LunarUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/leviiexesc/Lunar-UI-Library/refs/heads/main/LunarUI.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/leviiexesc/Lunar-UI-Library/refs/heads/main/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/leviiexesc/Lunar-UI-Library/refs/heads/main/Addons/InterfaceManager.lua"))()
+local Lunar = loadstring(game:HttpGet("https://raw.githubusercontent.com/leviiexesc/Lunar-UI-Library/refs/heads/main/LunarUI.lua"))()
 
--- Register your Roblox-uploaded Lucide assets once. The keys are exact names
--- from https://lucide.dev/icons/ and can be used in Icon = "..." below.
---[[
-LunarUI:RegisterLucideIcons({
-    home = "rbxassetid://YOUR_HOME_LUCIDE_ASSET_ID",
-    settings = "rbxassetid://YOUR_SETTINGS_LUCIDE_ASSET_ID",
-})
-]]
-
-local Window = LunarUI:CreateWindow({
+local Window = Lunar:CreateWindow({
     Title = "Lunar UI",
-    Subtitle = "Roblox UI Library",
-    Theme = "Dark",
-    LauncherIcon = "home",
+    Theme = "LiquidGlass",
     CustomCursor = true,
+    LauncherIcon = "home",
 })
 
-local Main = Window:AddTab({ Title = "Main", Icon = "home" })
-local Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
-local Features = Main:AddSection({ Title = "Features" })
+local Main = Window:AddTab({ Title = "Main" })
+local Settings = Window:AddTab({ Title = "Settings" })
+local More = Window:AddTab({ Title = "More" })
 
-Features:AddButton({
-    Title = "Click Me",
-    ButtonText = "Run",
-    Callback = function() print("Button clicked!") end,
+local Section = Main:AddSection({ Title = "Section" })
+
+Section:AddButton({
+    Title = "Button",
+    ButtonText = "Click Me",
+    Callback = function()
+        print("Button clicked!")
+    end,
 })
 
-local EnableFeature = Features:AddToggle("EnableFeature", {
-    Title = "Enable Feature",
-    Default = false,
-    Callback = function(value) print("Enabled:", value) end,
+Section:AddToggle({
+    Title = "Toggle Switch",
+    Default = true,
+    Callback = function(Value)
+        print(Value)
+    end,
 })
-EnableFeature:OnChanged(function(value)
-    print("Option object changed:", value)
+
+Section:AddSlider({
+    Title = "Slider",
+    Min = 0,
+    Max = 100,
+    Default = 50,
+    Callback = function(Value)
+        print(Value)
+    end,
+})
+
+Section:AddDropdown({
+    Title = "Dropdown",
+    Values = { "Option 1", "Option 2", "Option 3" },
+    Default = "Select...",
+    Callback = function(Value)
+        print(Value)
+    end,
+})
+
+Section:AddDropdown("MultiDropdown", {
+    Title = "Multi Dropdown",
+    Values = { "Option 1", "Option 2", "Option 3" },
+    Multi = true,
+    Default = { "Option 1" },
+})
+
+local Paragraph = Main:AddSection({ Title = "Paragraph" })
+Paragraph:AddParagraph({
+    Title = "Paragraph",
+    Content = "Discription",
+})
+
+local smallLauncher = Instance.new("Frame")
+smallLauncher.Name = "LunarCompactLauncher"
+smallLauncher.Size = UDim2.fromOffset(26, 26)
+smallLauncher.Position = UDim2.new(0, 18, 1, -44)
+smallLauncher.AnchorPoint = Vector2.new(0, 1)
+smallLauncher.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+smallLauncher.BackgroundTransparency = 0.12
+smallLauncher.BorderSizePixel = 0
+smallLauncher.Parent = Window.Gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(1, 0)
+corner.Parent = smallLauncher
+
+local glow = Instance.new("UIStroke")
+glow.Color = Color3.fromRGB(208, 203, 255)
+glow.Transparency = 0.5
+glow.Thickness = 1
+glow.Parent = smallLauncher
+
+local moon = Instance.new("TextLabel")
+moon.BackgroundTransparency = 1
+moon.Size = UDim2.fromScale(1, 1)
+moon.Text = "☾"
+moon.Font = Enum.Font.GothamBold
+moon.TextSize = 14
+moon.TextColor3 = Color3.fromRGB(245, 245, 248)
+moon.Parent = smallLauncher
+
+local hint = Instance.new("TextLabel")
+hint.BackgroundTransparency = 1
+hint.Position = UDim2.new(0, 38, 1, -20)
+hint.Size = UDim2.new(0, 220, 0, 20)
+hint.Text = "Small icon open close UI"
+hint.Font = Enum.Font.Gotham
+hint.TextSize = 8
+hint.TextColor3 = Color3.fromRGB(184, 188, 200)
+hint.TextXAlignment = Enum.TextXAlignment.Left
+hint.Parent = Window.Gui
+
+smallLauncher.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        Window:Toggle()
+    end
 end)
 
-local WalkSpeed = Features:AddSlider("WalkSpeed", {
-    Title = "WalkSpeed",
-    Min = 0, Max = 100, Default = 16,
-    Callback = function(value) print(value) end,
-})
-WalkSpeed:SetValue(20)
+Window:Notify({ Title = "Lunar UI", Content = "Liquid glass interface ready." })
 
-Features:AddDropdown({
-    Title = "Server Region",
-    Values = { "Singapore", "Frankfurt", "Virginia" },
-    Callback = function(value) print("Region:", value) end,
+-- Example theme and component API matching the reference window layout.
+local MainSettings = Settings:AddSection({ Title = "Main" })
+MainSettings:AddToggle({
+    Title = "Smooth Motion",
+    Default = true,
 })
-
-Features:AddDropdown("EnabledModules", {
-    Title = "Enabled Modules",
-    Description = "Choose more than one module.",
-    Values = { "Lighting", "Particles", "Analytics" },
-    Multi = true,
-    Default = { "Lighting" },
+MainSettings:AddDropdown({
+    Title = "Theme",
+    Values = { "LiquidGlass", "Dark", "Light" },
+    Default = "LiquidGlass",
 })
 
-Features:AddParagraph({
-    Title = "Lunar UI",
-    Content = "Simple. Powerful. Beautiful.",
+More:AddSection({ Title = "More" })
+More:AddParagraph({
+    Title = "Paragraph",
+    Content = "Discription",
 })
 
-Window:Notify({ Title = "Ready for launch", Content = "Your Lunar UI window has been created." })
+local function openWindow()
+    Window.Root.Visible = true
+end
 
-SaveManager:SetLibrary(LunarUI)
-SaveManager:SetFolder("LunarUIConfigs")
-SaveManager:IgnoreThemeSettings()
-SaveManager:BuildConfigSection(Settings)
+local function closeWindow()
+    Window.Root.Visible = false
+end
 
-InterfaceManager:SetLibrary(LunarUI)
-InterfaceManager:SetWindow(Window)
-InterfaceManager:BuildInterfaceSection(Settings)
+window = Window
 
--- The small crescent launcher appears when the user closes the window.
--- Tap/click it to reopen Lunar UI; this is mobile-friendly by default.
