@@ -150,7 +150,7 @@ function Lunar:CreateWindow(data)
     local content=new("ScrollingFrame",{BackgroundTransparency=1,BorderSizePixel=0,Position=UDim2.new(0,148,0,0),Size=UDim2.new(1,-148,1,0),ScrollBarThickness=3,ScrollBarImageColor3=theme.Muted,CanvasSize=UDim2.new()},body)
     pad(content,15);local list=new("UIListLayout",{Padding=UDim.new(0,14),SortOrder=Enum.SortOrder.LayoutOrder},content)
     list:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()content.CanvasSize=UDim2.fromOffset(0,list.AbsoluteContentSize.Y+36)end)
-    local launcher=new("TextButton",{Name="CompactLauncher",Text="",AutoButtonColor=false,BackgroundColor3=theme.Surface,BackgroundTransparency=.1,BorderSizePixel=0,Position=UDim2.new(0,18,1,-44),AnchorPoint=Vector2.new(0,1),Size=UDim2.fromOffset(27,27),ZIndex=100},gui);corner(launcher,20);stroke(launcher,theme.Border,.35);icon(launcher,data.LauncherIcon or "home",theme,UDim2.fromOffset(7,7),UDim2.fromOffset(13,13),101)
+    local launcher=new("TextButton",{Name="CompactLauncher",Text="L",AutoButtonColor=false,Font=Enum.Font.GothamBold,TextSize=11,TextColor3=theme.Text,BackgroundColor3=theme.Surface,BackgroundTransparency=.1,BorderSizePixel=0,Position=UDim2.new(0,18,1,-44),AnchorPoint=Vector2.new(0,1),Size=UDim2.fromOffset(27,27),ZIndex=100},gui);corner(launcher,20);stroke(launcher,theme.Border,.35)
     text(gui,"Small icon open close UI",8,theme.Muted,{Position=UDim2.new(0,54,1,-50),Size=UDim2.fromOffset(170,17),ZIndex=100})
     local window=setmetatable({Gui=gui,Root=root,Body=body,Sidebar=sidebar,Content=content,Theme=theme,ThemeName=themeName,Launcher=launcher,Tabs={},Values={},Search=search}, {__index=Lunar})
     draggable(bar,root)
@@ -162,7 +162,7 @@ end
 
 function Lunar:AddTab(data)
     data=data or {};local tab=setmetatable({Window=self},{__index=Lunar});local title=data.Title or "Tab"
-    local nav=new("TextButton",{Text="      "..title,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=self.Theme.Muted,TextXAlignment=Enum.TextXAlignment.Left,BackgroundTransparency=1,BorderSizePixel=0,AutoButtonColor=false,Size=UDim2.new(1,0,0,35),LayoutOrder=#self.Tabs+1},self.Sidebar);corner(nav,7);icon(nav,data.Icon or "circle",self.Theme,UDim2.fromOffset(11,10),UDim2.fromOffset(14,14),2)
+    local nav=new("TextButton",{Text=title,Font=Enum.Font.GothamMedium,TextSize=11,TextColor3=self.Theme.Muted,TextXAlignment=Enum.TextXAlignment.Left,BackgroundTransparency=1,BorderSizePixel=0,AutoButtonColor=false,Size=UDim2.new(1,0,0,35),LayoutOrder=#self.Tabs+1},self.Sidebar);corner(nav,7);pad(nav,9)
     local page=new("Frame",{BackgroundTransparency=1,Visible=false,AutomaticSize=Enum.AutomaticSize.Y,Size=UDim2.new(1,0,0,1)},self.Content);new("UIListLayout",{Padding=UDim.new(0,14),SortOrder=Enum.SortOrder.LayoutOrder},page)
     function tab:Select()for _,item in ipairs(self.Window.Tabs)do item.Page.Visible=false;item.Nav.BackgroundTransparency=1;item.Nav.TextColor3=self.Window.Theme.Muted end;page.Visible=true;nav.BackgroundColor3=self.Window.Theme.Active;nav.BackgroundTransparency=.12;nav.TextColor3=self.Window.Theme.Text end
     nav.MouseButton1Click:Connect(function()tab:Select()end);tab.Nav=nav;tab.Page=page;table.insert(self.Tabs,tab);if #self.Tabs==1 then tab:Select()end
@@ -222,6 +222,32 @@ Lunar.AddTextbox=Lunar.AddInput
 function Lunar:AddKeybind(flag,data)
     flag,data=normalize(flag,data);local key=data.Default or Enum.KeyCode.RightControl
     if type(key)=="string" then key=Enum.KeyCode[key] or Enum.KeyCode.RightControl end
+    local row=self:_row(data.Title or flag,data.Description)
+    local button=new("TextButton",{Text=key.Name,AutoButtonColor=false,Font=Enum.Font.Gotham,TextSize=10,TextColor3=self.Window.Theme.Text,BackgroundColor3=self.Window.Theme.Active,BorderSizePixel=0,Position=UDim2.new(1,-100,.5,-13),Size=UDim2.fromOffset(100,26)},row);corner(button,6)
+    local api;local listening=false
+    local function set(value)
+        if type(value)=="string" then value=Enum.KeyCode[value] or key end
+        key=value;button.Text=key.Name;self.Window.Values[flag]=key.Name;if data.ChangedCallback then data.ChangedCallback(key)end;if api then api:_set(key)end
+    end
+    button.MouseButton1Click:Connect(function()
+        if listening then return end;listening=true;button.Text="Press key..."
+        local connection;connection=UserInputService.InputBegan:Connect(function(input)
+            if input.UserInputType==Enum.UserInputType.Keyboard then set(input.KeyCode);listening=false;connection:Disconnect()end
+        end)
+    end)
+    UserInputService.InputBegan:Connect(function(input,processed)if not processed and input.KeyCode==key and data.Callback then data.Callback(true)end end)
+    api=option(flag,key,set);function api:GetState()return false end;return api
+end
+function Lunar:AddColorpicker(flag,data)
+    flag,data=normalize(flag,data);local value=data.Default or self.Window.Theme.Accent;local row=self:_row(data.Title or flag,data.Description)
+    local swatch=new("TextButton",{Text="",AutoButtonColor=false,BackgroundColor3=value,BorderSizePixel=0,Position=UDim2.new(1,-30,.5,-13),Size=UDim2.fromOffset(30,26)},row);corner(swatch,6);local api
+    local function set(nextValue)value=nextValue;swatch.BackgroundColor3=value;self.Window.Values[flag]=value;if data.Callback then data.Callback(value)end;if api then api:_set(value)end end
+    swatch.MouseButton1Click:Connect(function()set(Color3.fromHSV((os.clock()%10)/10,.55,1))end);api=option(flag,value,set);return api
+end
+Lunar.AddColorPicker=Lunar.AddColorpicker
+function Lunar:AddKeybind(flag,data)
+    flag,data=normalize(flag,data);local key=data.Default or Enum.KeyCode.RightControl
+    if type(key)=="string" then key=Enum.KeyCode[key] or Enum.KeyCode.RightControl end
     local row=self:_row(data.Title or flag,data.Description);local bind=new("TextButton",{Text=key.Name,AutoButtonColor=false,Font=Enum.Font.Gotham,TextSize=10,TextColor3=self.Window.Theme.Text,BackgroundColor3=self.Window.Theme.Active,BorderSizePixel=0,Position=UDim2.new(1,-100,.5,-13),Size=UDim2.fromOffset(100,26)},row);corner(bind,6)
     local api;local listening=false
     local function set(value)
@@ -258,6 +284,9 @@ function Lunar:AddImage(data)data=data or {};local id=data.Image or data.AssetId
 Lunar.AddDecal=Lunar.AddImage
 function Lunar:Notify(data)data=data or {};local n=new("Frame",{BackgroundColor3=self.Theme.Surface,BackgroundTransparency=self.Theme.SurfaceTransparency,BorderSizePixel=0,AnchorPoint=Vector2.new(1,1),Position=UDim2.new(1,-18,1,-18),Size=UDim2.fromOffset(260,64),ZIndex=150},self.Gui);corner(n,9);stroke(n,self.Theme.Border,.3);text(n,data.Title or "Lunar UI",11,self.Theme.Text,{Position=UDim2.fromOffset(13,11),Size=UDim2.new(1,-26,0,16),Font=Enum.Font.GothamBold,ZIndex=151});text(n,data.Content or "",9,self.Theme.Muted,{Position=UDim2.fromOffset(13,29),Size=UDim2.new(1,-26,0,22),TextWrapped=true,ZIndex=151});if data.Duration~=nil then task.delay(data.Duration or 4,function()if n.Parent then n:Destroy()end end)end;return n end
 function Lunar:SetTheme(name)if not Themes[name]then return false end;self.Theme=Themes[name];self.ThemeName=name;self.Root.BackgroundColor3=self.Theme.Background;self.Sidebar.BackgroundColor3=self.Theme.Surface;return true end
+function Lunar:SetAnimationsEnabled(enabled)Lunar.Animations=enabled~=false;return Lunar.Animations end
+function Lunar:SetAnimationStyle(style)return style or "Static" end
+function Lunar:SetProfileNameVisible()return false end
 function Lunar:SetAnimationsEnabled(enabled)Lunar.Animations=enabled~=false;return Lunar.Animations end
 function Lunar:SetAnimationStyle()return "Static" end
 function Lunar:SetProfileNameVisible()return false end
